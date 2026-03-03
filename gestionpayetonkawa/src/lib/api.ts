@@ -1,6 +1,6 @@
-const API_CLIENTS = "http://localhost:8000";
-const API_PRODUITS = "http://localhost:8001";
-const API_COMMANDES = "http://localhost:8002";
+const API_CLIENTS = "https://api.payetonkawa.ouzfa.com";
+const API_PRODUITS = "https://api.payetonkawa.ouzfa.com";
+const API_COMMANDES = "https://api.payetonkawa.ouzfa.com";
 
 // Clé API envoyée dans chaque requête
 const API_KEY = "secret_key_123";
