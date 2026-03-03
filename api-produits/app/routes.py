@@ -13,14 +13,32 @@ from .logging_config import logger
 UPLOAD_DIR = os.getenv("UPLOAD_DIR", "uploads")
 ALLOWED_EXTENSIONS = {"jpg", "jpeg", "png", "webp"}
 
+# Router principal AVEC authentification
 router = APIRouter(
     prefix="/products",
     tags=["Products"],
     dependencies=[Depends(verify_api_key)]
 )
 
+# Router pour les images SANS authentification
+images_router = APIRouter(
+    prefix="/products",
+    tags=["Images"]
+)
 
-# POST /products : Creer un produit
+
+# ===================== IMAGES (SANS AUTH) =====================
+
+@images_router.get("/uploads/{filename}")
+async def get_image(filename: str):
+    filepath = os.path.join(UPLOAD_DIR, filename)
+    if not os.path.exists(filepath):
+        raise HTTPException(status_code=404, detail="Image non trouvee")
+    return FileResponse(filepath)
+
+
+# ===================== PRODUITS (AVEC AUTH) =====================
+
 @router.post("/", response_model=schemas.ProduitResponse, status_code=201)
 def create_product(produit: schemas.ProduitCreate, db: Session = Depends(get_db)):
     db_produit = crud.create_produit(db=db, produit=produit)
@@ -33,13 +51,11 @@ def create_product(produit: schemas.ProduitCreate, db: Session = Depends(get_db)
     return db_produit
 
 
-# GET /products : Lister tous les produits
 @router.get("/", response_model=List[schemas.ProduitResponse])
 def read_products(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
     return crud.get_produits(db, skip=skip, limit=limit)
 
 
-# GET /products/{id} : Recuperer un produit par son ID
 @router.get("/{produit_id}", response_model=schemas.ProduitResponse)
 def read_product(produit_id: int, db: Session = Depends(get_db)):
     db_produit = crud.get_produit(db, produit_id=produit_id)
@@ -48,7 +64,6 @@ def read_product(produit_id: int, db: Session = Depends(get_db)):
     return db_produit
 
 
-# PUT /products/{id} : Modifier un produit
 @router.put("/{produit_id}", response_model=schemas.ProduitResponse)
 def update_product(produit_id: int, produit: schemas.ProduitUpdate, db: Session = Depends(get_db)):
     db_produit = crud.update_produit(db, produit_id=produit_id, produit=produit)
@@ -65,7 +80,6 @@ def update_product(produit_id: int, produit: schemas.ProduitUpdate, db: Session 
     return db_produit
 
 
-# DELETE /products/{id} : Supprimer un produit
 @router.delete("/{produit_id}", status_code=204)
 def delete_product(produit_id: int, db: Session = Depends(get_db)):
     success = crud.delete_produit(db, produit_id=produit_id)
@@ -75,7 +89,6 @@ def delete_product(produit_id: int, db: Session = Depends(get_db)):
     rabbitmq.publish_produit_deleted(produit_id)
 
 
-# POST /products/{id}/image : Uploader une image pour un produit
 @router.post("/{produit_id}/image", response_model=schemas.ProduitResponse)
 async def upload_product_image(
     produit_id: int,
@@ -93,7 +106,6 @@ async def upload_product_image(
             detail="Format invalide. Formats acceptes : jpg, jpeg, png, webp"
         )
 
-    # Supprimer l'ancienne image du produit s'il en a une
     for old_file in glob.glob(os.path.join(UPLOAD_DIR, f"produit_{produit_id}.*")):
         os.remove(old_file)
 
@@ -104,12 +116,3 @@ async def upload_product_image(
 
     image_url = f"/uploads/{filename}"
     return crud.update_produit_image(db, produit_id=produit_id, image_url=image_url)
-
-
-# GET /products/uploads/{filename} : Servir les images (SANS authentification)
-@router.get("/uploads/{filename}", dependencies=[])
-async def get_image(filename: str):
-    filepath = os.path.join(UPLOAD_DIR, filename)
-    if not os.path.exists(filepath):
-        raise HTTPException(status_code=404, detail="Image non trouvee")
-    return FileResponse(filepath)

@@ -5,7 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from sqlalchemy import text
 from .database import engine, Base, SessionLocal
-from .routes import router
+from .routes import router, images_router
 from .logging_config import logger, LoggingMiddleware
 
 Base.metadata.create_all(bind=engine)
@@ -32,6 +32,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+app.include_router(images_router)
 app.include_router(router)
 app.mount("/uploads", StaticFiles(directory=UPLOAD_DIR), name="uploads")
 
