@@ -1,108 +1,12 @@
-J'ai trouvé le problème ! 🔍
+🎫 FIX : Exclure la route images de l'authentification
+Modifier api-produits/app/routes.py
+Remplace la route get_image par celle-ci (sans dépendance) :
 
-L'API sauvegarde les images dans `/uploads/` mais **ne les sert pas**. Il manque :
-
-1. Une route pour servir les images
-2. Un volume Docker pour persister les images
-3. Nginx pour servir les fichiers statiques
-
----
-
-## 🎫 TICKET : Corriger l'affichage des images
-
-### 1️⃣ Ajouter la route pour servir les images
-
-**Fichier : `api-produits/app/routes.py`**
-
-Ajoute à la fin du fichier :
-
-```python
-from fastapi.responses import FileResponse
-
-# GET /products/uploads/{filename} : Servir les images
-@router.get("/uploads/{filename}")
+# GET /products/uploads/{filename} : Servir les images (SANS authentification)
+@router.get("/uploads/{filename}", dependencies=[])
 async def get_image(filename: str):
     filepath = os.path.join(UPLOAD_DIR, filename)
     if not os.path.exists(filepath):
         raise HTTPException(status_code=404, detail="Image non trouvee")
     return FileResponse(filepath)
-```
-
----
-
-### 2️⃣ Créer le dossier uploads et le persister
-
-**Fichier : `api-produits/Dockerfile`**
-
-Ajoute cette ligne avant `CMD` :
-
-```dockerfile
-RUN mkdir -p /app/uploads
-```
-
----
-
-### 3️⃣ Ajouter un volume dans docker-compose.yml
-
-Dans le service `api-produits` :
-
-```yaml
-  api-produits:
-    build: ./api-produits
-    ports:
-      - "8001:8000"
-    environment:
-      DATABASE_URL: postgresql://faouz:faouz2020@db-produits:5432/produits_db
-      API_KEY: secret_key_123
-      ALLOWED_ORIGINS: "https://payetonkawa.ouzfa.com,https://admin.payetonkawa.ouzfa.com,http://localhost:3000,http://localhost:4321,http://localhost:4322"
-      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672/
-      UPLOAD_DIR: /app/uploads
-    volumes:
-      - uploads_data:/app/uploads
-    depends_on:
-      - db-produits
-      - rabbitmq
-```
-
-Et à la fin du fichier, dans `volumes:` :
-
-```yaml
-volumes:
-  db_clients_data:
-  db_produits_data:
-  db_commandes_data:
-  uploads_data:
-```
-
----
-
-### 4️⃣ Ajouter la route dans Nginx
-
-**Sur le serveur** :
-
-```bash
-sudo nano /etc/nginx/sites-available/payetonkawa
-```
-
-Dans le bloc `api.payetonkawa.ouzfa.com`, ajoute :
-
-```nginx
-    location /products/uploads {
-        proxy_pass http://localhost:8001;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-    }
-```
-
----
-
-## ✅ Checklist
-
-- [ ] Modifier `api-produits/app/routes.py` (ajouter route `/uploads/{filename}`)
-- [ ] Modifier `api-produits/Dockerfile` (créer dossier uploads)
-- [ ] Modifier `docker-compose.yml` (ajouter volume)
-- [ ] Push sur GitHub
-- [ ] Sur le serveur : modifier Nginx + redéployer
-
+Le dependencies=[] écrase la dépendance du router et permet l'accès sans API Key.

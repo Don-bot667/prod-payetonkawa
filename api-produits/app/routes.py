@@ -106,8 +106,8 @@ async def upload_product_image(
     return crud.update_produit_image(db, produit_id=produit_id, image_url=image_url)
 
 
-# GET /products/uploads/{filename} : Servir les images
-@router.get("/uploads/{filename}")
+# GET /products/uploads/{filename} : Servir les images (SANS authentification)
+@router.get("/uploads/{filename}", dependencies=[])
 async def get_image(filename: str):
     filepath = os.path.join(UPLOAD_DIR, filename)
     if not os.path.exists(filepath):
