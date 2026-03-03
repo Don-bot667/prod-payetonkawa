@@ -114,6 +114,13 @@ export async function deleteClient(id: number): Promise<void> {
     });
 }
 
+// --- HELPERS ---
+
+export function getImageUrl(imageUrl: string | null | undefined): string {
+    if (!imageUrl) return '';
+    return `${API_PRODUITS}/products${imageUrl}`;
+}
+
 // --- PRODUITS ---
 
 export async function getProduits(): Promise<Produit[]> {

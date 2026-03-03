@@ -17,7 +17,7 @@ const { id } = Astro.params;
 </Layout>
 
 <script>
-    import { getProduit } from '../../lib/api';
+    import { getProduit, getImageUrl } from '../../lib/api';
     import { addToCart } from '../../lib/cart';
 
     const placeholderImages = [
@@ -51,7 +51,7 @@ const { id } = Astro.params;
         try {
             const p = await getProduit(id);
             const image = p.image_url
-                ? 'http://localhost:8001' + p.image_url
+                ? getImageUrl(p.image_url)
                 : placeholderImages[id % placeholderImages.length];
 
             container.innerHTML = `

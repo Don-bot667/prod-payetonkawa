@@ -115,6 +115,13 @@ export async function loginClient(email: string, mot_de_passe: string): Promise<
     return response.json();
 }
 
+// ============ HELPERS ============
+
+export function getImageUrl(imageUrl: string | null | undefined): string {
+    if (!imageUrl) return '';
+    return `${API_PRODUITS}/products${imageUrl}`;
+}
+
 // ============ PRODUITS ============
 
 export async function getProduits(): Promise<Produit[]> {

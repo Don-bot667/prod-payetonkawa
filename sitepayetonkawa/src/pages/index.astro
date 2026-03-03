@@ -62,7 +62,7 @@ import Hero from '../components/Hero.astro';
 </Layout>
 
 <script>
-    import { getProduits } from '../lib/api';
+    import { getProduits, getImageUrl } from '../lib/api';
     import { addToCart } from '../lib/cart';
 
     const placeholderImages = [
@@ -87,7 +87,7 @@ import Hero from '../components/Hero.astro';
 
             container.innerHTML = featured.map((p, i) => {
                 const image = p.image_url
-                    ? 'http://localhost:8001' + p.image_url
+                    ? getImageUrl(p.image_url)
                     : placeholderImages[i % placeholderImages.length];
                 return `
                 <div class="product-card bg-white rounded-2xl shadow-sm overflow-hidden border border-gray-100">

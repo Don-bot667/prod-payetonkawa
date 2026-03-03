@@ -117,7 +117,7 @@ import Layout from '../layouts/Layout.astro';
 </Layout>
 
 <script>
-    import { getProduits, getProduit, createProduit, updateProduit, deleteProduit, uploadProductImage, type ProduitCreate } from '../lib/api';
+    import { getProduits, getProduit, createProduit, updateProduit, deleteProduit, uploadProductImage, getImageUrl, type ProduitCreate } from '../lib/api';
 
     let editMode = false;
 
@@ -178,7 +178,7 @@ import Layout from '../layouts/Layout.astro';
                         <div class="flex items-center gap-4">
                             <div class="w-12 h-12 bg-gradient-to-br from-amber-100 to-amber-200 rounded-xl flex items-center justify-center overflow-hidden flex-shrink-0">
                                 ${p.image_url
-                                    ? `<img src="http://localhost:8001${p.image_url}" alt="${p.nom}" class="w-full h-full object-cover">`
+                                    ? `<img src="${getImageUrl(p.image_url)}" alt="${p.nom}" class="w-full h-full object-cover">`
                                     : `<svg class="w-6 h-6 text-amber-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>`
                                 }
                             </div>

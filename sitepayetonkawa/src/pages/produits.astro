@@ -24,7 +24,7 @@ import Layout from '../layouts/Layout.astro';
 </Layout>
 
 <script>
-    import { getProduits } from '../lib/api';
+    import { getProduits, getImageUrl } from '../lib/api';
     import { addToCart } from '../lib/cart';
 
     const placeholderImages = [
@@ -50,7 +50,7 @@ import Layout from '../layouts/Layout.astro';
 
             container.innerHTML = produits.map((p, i) => {
                 const image = p.image_url
-                    ? 'http://localhost:8001' + p.image_url
+                    ? getImageUrl(p.image_url)
                     : placeholderImages[i % placeholderImages.length];
                 return `
                 <div class="product-card bg-white rounded-2xl shadow-sm overflow-hidden border border-gray-100 fade-in">
