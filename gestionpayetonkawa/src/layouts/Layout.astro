@@ -26,5 +26,11 @@ const { title, currentPage } = Astro.props;
             <slot />
         </main>
     </div>
+
+    <script>
+        if (!localStorage.getItem('admin_logged')) {
+            window.location.href = '/connexion';
+        }
+    </script>
 </body>
 </html>

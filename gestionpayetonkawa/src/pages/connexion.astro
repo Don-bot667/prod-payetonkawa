@@ -1,0 +1,82 @@
+---
+import '../styles/global.css';
+---
+
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Connexion - GestionPayeTonKawa</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body class="bg-[#120905] min-h-screen flex items-center justify-center">
+
+    <div class="w-full max-w-sm px-4">
+
+        <div class="flex flex-col items-center mb-8">
+            <div class="w-14 h-14 rounded-xl bg-[#2D1B14] border border-[#4A3228] flex items-center justify-center mb-4">
+                <img src="/img/logo.png" alt="Logo" class="w-10 h-10 object-contain" />
+            </div>
+            <h1 class="text-2xl font-bold text-[#E3CBA3]">PayeTonKawa</h1>
+            <p class="text-[#634832] text-sm mt-1 uppercase tracking-widest font-semibold">Administration</p>
+        </div>
+
+        <div class="bg-[#1A0F0A] border border-[#2D1B14] rounded-2xl p-8 shadow-2xl">
+            <h2 class="text-lg font-semibold text-[#E3CBA3] mb-6">Connexion</h2>
+
+            <div id="error-message" class="hidden mb-4 px-4 py-3 bg-red-900/30 border border-red-700/50 rounded-lg text-red-400 text-sm">
+                Identifiants incorrects.
+            </div>
+
+            <form id="login-form" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-[#8C7365] mb-1.5">Nom d'utilisateur</label>
+                    <input
+                        id="username"
+                        type="text"
+                        class="w-full bg-[#120905] border border-[#2D1B14] rounded-lg px-4 py-2.5 text-[#E3CBA3] text-sm placeholder-[#4A3228] focus:outline-none focus:border-[#634832] transition"
+                        placeholder="Admin"
+                        autocomplete="username"
+                    />
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-[#8C7365] mb-1.5">Mot de passe</label>
+                    <input
+                        id="password"
+                        type="password"
+                        class="w-full bg-[#120905] border border-[#2D1B14] rounded-lg px-4 py-2.5 text-[#E3CBA3] text-sm placeholder-[#4A3228] focus:outline-none focus:border-[#634832] transition"
+                        placeholder="••••••"
+                        autocomplete="current-password"
+                    />
+                </div>
+                <button
+                    type="submit"
+                    class="w-full bg-[#2D1B14] hover:bg-[#3D2418] border border-[#4A3228] text-[#E3CBA3] font-semibold py-2.5 rounded-lg text-sm transition mt-2"
+                >
+                    Se connecter
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const form = document.getElementById('login-form') as HTMLFormElement;
+        const errorMsg = document.getElementById('error-message') as HTMLElement;
+
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const username = (document.getElementById('username') as HTMLInputElement).value;
+            const password = (document.getElementById('password') as HTMLInputElement).value;
+
+            if (username === 'Admin' && password === 'Admin') {
+                localStorage.setItem('admin_logged', 'true');
+                window.location.href = '/';
+            } else {
+                errorMsg.classList.remove('hidden');
+                (document.getElementById('password') as HTMLInputElement).value = '';
+            }
+        });
+    </script>
+</body>
+</html>

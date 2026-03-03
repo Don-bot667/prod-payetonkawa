@@ -91,6 +91,31 @@ services:
       retries: 3
       start_period: 40s
 
+  # === FRONTENDS ===
+  sitepayetonkawa:
+    build: ./sitepayetonkawa
+    ports:
+      - "4321:4321"
+    volumes:
+      - ./sitepayetonkawa/src:/app/src
+      - ./sitepayetonkawa/public:/app/public
+    depends_on:
+      - api-clients
+      - api-produits
+      - api-commandes
+
+  gestionpayetonkawa:
+    build: ./gestionpayetonkawa
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./gestionpayetonkawa/src:/app/src
+      - ./gestionpayetonkawa/public:/app/public
+    depends_on:
+      - api-clients
+      - api-produits
+      - api-commandes
+
   # === MESSAGE BROKER ===
   rabbitmq:
     image: rabbitmq:3-management
