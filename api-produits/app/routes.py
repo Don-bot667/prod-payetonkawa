@@ -2,6 +2,7 @@ import os
 import glob
 import shutil
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
+from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 from typing import List
 from . import crud, schemas, rabbitmq
@@ -103,3 +104,12 @@ async def upload_product_image(
 
     image_url = f"/uploads/{filename}"
     return crud.update_produit_image(db, produit_id=produit_id, image_url=image_url)
+
+
+# GET /products/uploads/{filename} : Servir les images
+@router.get("/uploads/{filename}")
+async def get_image(filename: str):
+    filepath = os.path.join(UPLOAD_DIR, filename)
+    if not os.path.exists(filepath):
+        raise HTTPException(status_code=404, detail="Image non trouvee")
+    return FileResponse(filepath)

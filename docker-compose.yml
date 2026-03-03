@@ -62,6 +62,9 @@ services:
       API_KEY: secret_key_123
       ALLOWED_ORIGINS: "https://payetonkawa.ouzfa.com,https://admin.payetonkawa.ouzfa.com,http://localhost:3000,http://localhost:4321,http://localhost:4322"
       RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672/
+      UPLOAD_DIR: /app/uploads
+    volumes:
+      - uploads_data:/app/uploads
     depends_on:
       - db-produits
       - rabbitmq
@@ -148,3 +151,4 @@ volumes:
   db_clients_data:
   db_produits_data:
   db_commandes_data:
+  uploads_data:
