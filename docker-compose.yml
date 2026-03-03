@@ -96,9 +96,6 @@ services:
     build: ./sitepayetonkawa
     ports:
       - "4321:4321"
-    volumes:
-      - ./sitepayetonkawa/src:/app/src
-      - ./sitepayetonkawa/public:/app/public
     depends_on:
       - api-clients
       - api-produits
@@ -108,9 +105,6 @@ services:
     build: ./gestionpayetonkawa
     ports:
       - "3000:3000"
-    volumes:
-      - ./gestionpayetonkawa/src:/app/src
-      - ./gestionpayetonkawa/public:/app/public
     depends_on:
       - api-clients
       - api-produits
