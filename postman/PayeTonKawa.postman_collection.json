@@ -1,0 +1,791 @@
+{
+  "info": {
+    "name": "PayeTonKawa",
+    "_postman_id": "payetonkawa-collection-v1",
+    "description": "Collection complète pour l'API PayeTonKawa — microservices café.\nAuthentification : header X-API-Key requis sur toutes les routes métier.\n\nEnvironnement recommandé : PayeTonKawa_local",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "apikey",
+    "apikey": [
+      { "key": "key",   "value": "X-API-Key",    "type": "string" },
+      { "key": "value", "value": "{{api_key}}",   "type": "string" },
+      { "key": "in",    "value": "header",         "type": "string" }
+    ]
+  },
+  "item": [
+    {
+      "name": "Health",
+      "description": "Endpoints de monitoring — pas d'authentification requise.",
+      "item": [
+        {
+          "name": "Health — API Clients",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url_clients}}/health",
+              "host": ["{{base_url_clients}}"],
+              "path": ["health"]
+            },
+            "description": "Vérifie l'état de l'API Clients et de sa base de données PostgreSQL."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Service healthy', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.status).to.eql('healthy');",
+                  "  pm.expect(json.service).to.eql('api-clients');",
+                  "  pm.expect(json.database).to.eql('connected');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Health — API Produits",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url_produits}}/health",
+              "host": ["{{base_url_produits}}"],
+              "path": ["health"]
+            },
+            "description": "Vérifie l'état de l'API Produits et de sa base de données PostgreSQL."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Service healthy', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.status).to.eql('healthy');",
+                  "  pm.expect(json.service).to.eql('api-produits');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Health — API Commandes",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url_commandes}}/health",
+              "host": ["{{base_url_commandes}}"],
+              "path": ["health"]
+            },
+            "description": "Vérifie l'état de l'API Commandes et de sa base de données PostgreSQL."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Service healthy', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.status).to.eql('healthy');",
+                  "  pm.expect(json.service).to.eql('api-commandes');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Clients",
+      "description": "CRUD complet sur les clients. Toutes les routes nécessitent X-API-Key.",
+      "item": [
+        {
+          "name": "Créer un client",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nom\": \"Dupont\",\n  \"prenom\": \"Jean\",\n  \"email\": \"jean.dupont@example.com\",\n  \"mot_de_passe\": \"monMdp123\",\n  \"telephone\": \"0612345678\",\n  \"adresse\": \"12 rue de la Paix, Paris 75001\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url_clients}}/customers/",
+              "host": ["{{base_url_clients}}"],
+              "path": ["customers", ""]
+            },
+            "description": "Crée un nouveau client. Le mot de passe est haché avec bcrypt avant stockage."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                  "pm.test('Client créé avec ID', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json).to.have.property('id');",
+                  "  pm.expect(json.email).to.eql('jean.dupont@example.com');",
+                  "  pm.expect(json).to.not.have.property('mot_de_passe');",
+                  "  pm.environment.set('client_id', json.id);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Lister les clients",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url_clients}}/customers/?skip=0&limit=20",
+              "host": ["{{base_url_clients}}"],
+              "path": ["customers", ""],
+              "query": [
+                { "key": "skip",  "value": "0" },
+                { "key": "limit", "value": "20" }
+              ]
+            },
+            "description": "Retourne la liste paginée des clients. Paramètres : skip (défaut 0) et limit (défaut 100)."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Réponse est un tableau', () => {",
+                  "  pm.expect(pm.response.json()).to.be.an('array');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Obtenir un client par ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url_clients}}/customers/{{client_id}}",
+              "host": ["{{base_url_clients}}"],
+              "path": ["customers", "{{client_id}}"]
+            },
+            "description": "Retourne un client par son identifiant. 404 si introuvable."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('ID correspond', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(String(json.id)).to.eql(pm.environment.get('client_id'));",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Connexion client",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"jean.dupont@example.com\",\n  \"mot_de_passe\": \"monMdp123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url_clients}}/customers/login",
+              "host": ["{{base_url_clients}}"],
+              "path": ["customers", "login"]
+            },
+            "description": "Authentifie un client par email + mot de passe. Retourne 401 si les credentials sont incorrects."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Connexion réussie', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json).to.have.property('id');",
+                  "  pm.expect(json.email).to.eql('jean.dupont@example.com');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Modifier un client",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"adresse\": \"99 avenue des Champs, Lyon 69001\",\n  \"telephone\": \"0698765432\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url_clients}}/customers/{{client_id}}",
+              "host": ["{{base_url_clients}}"],
+              "path": ["customers", "{{client_id}}"]
+            },
+            "description": "Modifie partiellement un client. Seuls les champs envoyés sont mis à jour."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Adresse mise à jour', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.adresse).to.eql('99 avenue des Champs, Lyon 69001');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Supprimer un client",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url_clients}}/customers/{{client_id}}",
+              "host": ["{{base_url_clients}}"],
+              "path": ["customers", "{{client_id}}"]
+            },
+            "description": "Supprime un client. Publie un événement client.deleted sur RabbitMQ. Retourne 204."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 204', () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Produits",
+      "description": "CRUD complet sur le catalogue produits (café). Toutes les routes nécessitent X-API-Key.",
+      "item": [
+        {
+          "name": "Créer un produit",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nom\": \"Café Burkina Faso\",\n  \"description\": \"Café fruité aux notes de myrtille\",\n  \"prix\": 12.50,\n  \"stock\": 100,\n  \"origine\": \"Burkina Faso\",\n  \"poids_kg\": 0.25\n}"
+            },
+            "url": {
+              "raw": "{{base_url_produits}}/products/",
+              "host": ["{{base_url_produits}}"],
+              "path": ["products", ""]
+            },
+            "description": "Crée un nouveau produit dans le catalogue."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                  "pm.test('Produit créé', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json).to.have.property('id');",
+                  "  pm.expect(json.nom).to.eql('Café Burkina Faso');",
+                  "  pm.expect(json.actif).to.be.true;",
+                  "  pm.environment.set('produit_id', json.id);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Lister les produits",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url_produits}}/products/?skip=0&limit=50",
+              "host": ["{{base_url_produits}}"],
+              "path": ["products", ""],
+              "query": [
+                { "key": "skip",  "value": "0" },
+                { "key": "limit", "value": "50" }
+              ]
+            },
+            "description": "Retourne la liste paginée des produits actifs."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Réponse est un tableau', () => {",
+                  "  pm.expect(pm.response.json()).to.be.an('array');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Obtenir un produit par ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url_produits}}/products/{{produit_id}}",
+              "host": ["{{base_url_produits}}"],
+              "path": ["products", "{{produit_id}}"]
+            },
+            "description": "Retourne un produit par son identifiant. 404 si introuvable."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('ID correspond', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(String(json.id)).to.eql(pm.environment.get('produit_id'));",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Modifier un produit",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"prix\": 13.50,\n  \"stock\": 80\n}"
+            },
+            "url": {
+              "raw": "{{base_url_produits}}/products/{{produit_id}}",
+              "host": ["{{base_url_produits}}"],
+              "path": ["products", "{{produit_id}}"]
+            },
+            "description": "Modifie partiellement un produit. Si le stock passe sous 10, un événement produit.stock_low est publié sur RabbitMQ."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Prix mis à jour', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.prix).to.eql(13.50);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Upload image produit",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "description": "Image du produit (jpg, jpeg, png ou webp)",
+                  "src": ""
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url_produits}}/products/{{produit_id}}/image",
+              "host": ["{{base_url_produits}}"],
+              "path": ["products", "{{produit_id}}", "image"]
+            },
+            "description": "Upload une image pour un produit. Formats acceptés : jpg, jpeg, png, webp. L'image est sauvegardée dans /uploads/ et l'URL est mise à jour sur le produit."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('image_url renseignée', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.image_url).to.be.a('string').and.not.empty;",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Supprimer un produit",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url_produits}}/products/{{produit_id}}",
+              "host": ["{{base_url_produits}}"],
+              "path": ["products", "{{produit_id}}"]
+            },
+            "description": "Supprime un produit. Publie un événement produit.deleted sur RabbitMQ. Retourne 204."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 204', () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Commandes",
+      "description": "CRUD complet sur les commandes clients. Toutes les routes nécessitent X-API-Key.",
+      "item": [
+        {
+          "name": "Créer une commande",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"client_id\": 1,\n  \"lignes\": [\n    {\n      \"produit_id\": 1,\n      \"quantite\": 2,\n      \"prix_unitaire\": 12.50\n    },\n    {\n      \"produit_id\": 2,\n      \"quantite\": 1,\n      \"prix_unitaire\": 8.00\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{base_url_commandes}}/orders/",
+              "host": ["{{base_url_commandes}}"],
+              "path": ["orders", ""]
+            },
+            "description": "Crée une nouvelle commande avec ses lignes. Le total est calculé automatiquement (somme de quantite * prix_unitaire). Publie un événement commande.created sur RabbitMQ."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                  "pm.test('Commande créée', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json).to.have.property('id');",
+                  "  pm.expect(json.statut).to.eql('en_attente');",
+                  "  pm.expect(json.total).to.eql(33.0);",
+                  "  pm.expect(json.lignes).to.be.an('array').with.lengthOf(2);",
+                  "  pm.environment.set('commande_id', json.id);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Lister les commandes",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url_commandes}}/orders/?skip=0&limit=50",
+              "host": ["{{base_url_commandes}}"],
+              "path": ["orders", ""],
+              "query": [
+                { "key": "skip",  "value": "0" },
+                { "key": "limit", "value": "50" }
+              ]
+            },
+            "description": "Retourne la liste paginée de toutes les commandes avec leurs lignes."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Réponse est un tableau', () => {",
+                  "  pm.expect(pm.response.json()).to.be.an('array');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Obtenir une commande par ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url_commandes}}/orders/{{commande_id}}",
+              "host": ["{{base_url_commandes}}"],
+              "path": ["orders", "{{commande_id}}"]
+            },
+            "description": "Retourne une commande avec toutes ses lignes. 404 si introuvable."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('ID correspond', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(String(json.id)).to.eql(pm.environment.get('commande_id'));",
+                  "  pm.expect(json.lignes).to.be.an('array');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Commandes d'un client",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url_commandes}}/orders/client/{{client_id}}",
+              "host": ["{{base_url_commandes}}"],
+              "path": ["orders", "client", "{{client_id}}"]
+            },
+            "description": "Retourne toutes les commandes d'un client donné. Retourne une liste vide si le client n'a pas de commandes."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Réponse est un tableau', () => {",
+                  "  pm.expect(pm.response.json()).to.be.an('array');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Modifier le statut d'une commande",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"statut\": \"validee\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url_commandes}}/orders/{{commande_id}}",
+              "host": ["{{base_url_commandes}}"],
+              "path": ["orders", "{{commande_id}}"]
+            },
+            "description": "Modifie le statut d'une commande. Flux : en_attente → validee → expediee → livree. Statut client_supprime géré automatiquement via RabbitMQ."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Statut mis à jour', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.statut).to.eql('validee');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Supprimer une commande",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url_commandes}}/orders/{{commande_id}}",
+              "host": ["{{base_url_commandes}}"],
+              "path": ["orders", "{{commande_id}}"]
+            },
+            "description": "Supprime une commande et toutes ses lignes (CASCADE). Publie un événement commande.deleted sur RabbitMQ. Retourne 204."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 204', () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Authentification (tests négatifs)",
+      "description": "Tests des cas d'erreur d'authentification — permet de vérifier que les protections API Key fonctionnent.",
+      "item": [
+        {
+          "name": "Sans API Key → 401",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url_clients}}/customers/",
+              "host": ["{{base_url_clients}}"],
+              "path": ["customers", ""]
+            },
+            "description": "Requête sans header X-API-Key. Doit retourner 401 Unauthorized."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 401 — clé absente', () => pm.response.to.have.status(401));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Mauvaise API Key → 403",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "header": [
+              { "key": "X-API-Key", "value": "mauvaise-cle" }
+            ],
+            "url": {
+              "raw": "{{base_url_clients}}/customers/",
+              "host": ["{{base_url_clients}}"],
+              "path": ["customers", ""]
+            },
+            "description": "Requête avec une clé API incorrecte. Doit retourner 403 Forbidden."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 403 — clé invalide', () => pm.response.to.have.status(403));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Données invalides → 422",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nom\": \"X\",\n  \"prenom\": \"Jean\",\n  \"email\": \"pas-un-email\",\n  \"mot_de_passe\": \"ok\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url_clients}}/customers/",
+              "host": ["{{base_url_clients}}"],
+              "path": ["customers", ""]
+            },
+            "description": "Requête avec données invalides (nom trop court + email mal formé). Doit retourner 422 Unprocessable Entity avec détail des erreurs."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 422 — données invalides', () => pm.response.to.have.status(422));",
+                  "pm.test('Détail des erreurs présent', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json).to.have.property('detail');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "variable": []
+}

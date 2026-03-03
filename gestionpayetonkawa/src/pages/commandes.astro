@@ -1,0 +1,466 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout title="Commandes" currentPage="commandes">
+    <header class="bg-white border-b border-gray-100 px-8 py-6 flex items-center justify-between">
+        <div>
+            <h2 class="text-2xl font-bold text-gray-900">Commandes</h2>
+            <p class="text-gray-500 text-sm mt-1">Suivi et gestion des commandes</p>
+        </div>
+        <button id="btn-ajouter" class="btn-primary">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+            </svg>
+            Nouvelle commande
+        </button>
+    </header>
+
+    <div class="p-8">
+        <div class="card">
+            <div class="overflow-x-auto">
+                <table class="w-full">
+                    <thead class="table-header">
+                        <tr>
+                            <th class="px-6 py-4">Commande</th>
+                            <th class="px-6 py-4">Client</th>
+                            <th class="px-6 py-4">Articles</th>
+                            <th class="px-6 py-4">Total</th>
+                            <th class="px-6 py-4">Statut</th>
+                            <th class="px-6 py-4">Date</th>
+                            <th class="px-6 py-4 text-right">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="table-commandes" class="divide-y divide-gray-100 text-sm">
+                        <tr>
+                            <td colspan="7" class="px-6 py-12 text-center text-gray-400">
+                                <svg class="w-8 h-8 mx-auto mb-2 animate-spin text-gray-300" fill="none" viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                                Chargement...
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODALE : Nouvelle commande -->
+    <div id="modal" class="modal-backdrop fixed inset-0 bg-black/50 backdrop-blur-sm hidden items-center justify-center z-50">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl mx-4 overflow-hidden">
+            <div class="bg-gradient-to-r from-amber-500 to-amber-600 px-6 py-5">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
+                            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                            </svg>
+                        </div>
+                        <h3 class="text-lg font-semibold text-white">Nouvelle commande</h3>
+                    </div>
+                    <button id="btn-close-modal" class="text-white/70 hover:text-white transition p-1">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+            <form id="form-commande" class="p-6 space-y-5">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Client</label>
+                    <select id="input-client" required class="input">
+                        <option value="">-- Choisir un client --</option>
+                    </select>
+                </div>
+
+                <div>
+                    <div class="flex items-center justify-between mb-3">
+                        <label class="block text-sm font-medium text-gray-700">Articles</label>
+                        <button type="button" id="btn-ajouter-ligne" class="text-sm text-amber-600 hover:text-amber-800 font-medium flex items-center gap-1">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                            </svg>
+                            Ajouter un article
+                        </button>
+                    </div>
+                    <div id="lignes-container" class="space-y-3">
+                        <!-- Lignes ajoutees dynamiquement -->
+                    </div>
+                </div>
+
+                <div class="bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl p-5 flex items-center justify-between">
+                    <span class="text-gray-600 font-medium">Total de la commande</span>
+                    <span id="total-commande" class="text-2xl font-bold text-amber-600">0.00 EUR</span>
+                </div>
+
+                <div class="flex justify-end gap-3 pt-4 border-t border-gray-100">
+                    <button type="button" id="btn-annuler" class="btn-secondary">Annuler</button>
+                    <button type="submit" class="btn-primary bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                        </svg>
+                        Valider la commande
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODALE : Changer le statut -->
+    <div id="modal-statut" class="modal-backdrop fixed inset-0 bg-black/50 backdrop-blur-sm hidden items-center justify-center z-50">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm mx-4 overflow-hidden">
+            <div class="bg-gradient-to-r from-indigo-600 to-indigo-700 px-6 py-5">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
+                            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                            </svg>
+                        </div>
+                        <h3 class="text-lg font-semibold text-white">Changer le statut</h3>
+                    </div>
+                    <button id="btn-close-statut" class="text-white/70 hover:text-white transition p-1">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+            <form id="form-statut" class="p-6 space-y-5">
+                <input type="hidden" id="statut-commande-id">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Nouveau statut</label>
+                    <select id="input-statut" required class="input">
+                        <option value="en_attente">En attente</option>
+                        <option value="validee">Validee</option>
+                        <option value="en_preparation">En preparation</option>
+                        <option value="expediee">Expediee</option>
+                        <option value="livree">Livree</option>
+                        <option value="annulee">Annulee</option>
+                    </select>
+                </div>
+                <div class="flex justify-end gap-3 pt-4 border-t border-gray-100">
+                    <button type="button" id="btn-annuler-statut" class="btn-secondary">Annuler</button>
+                    <button type="submit" class="btn-primary">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                        </svg>
+                        Enregistrer
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</Layout>
+
+<script>
+    import {
+        getClients, getProduits, getCommandes,
+        createCommande, updateCommande, deleteCommande,
+        type Produit, type LigneCommandeCreate
+    } from '../lib/api';
+
+    let produitsDisponibles: Produit[] = [];
+
+    const modal = document.getElementById("modal")!;
+    const modalStatut = document.getElementById("modal-statut")!;
+    const btnAjouter = document.getElementById("btn-ajouter")!;
+    const btnClose = document.getElementById("btn-close-modal")!;
+    const btnAnnuler = document.getElementById("btn-annuler")!;
+    const btnCloseStatut = document.getElementById("btn-close-statut")!;
+    const btnAnnulerStatut = document.getElementById("btn-annuler-statut")!;
+    const btnAjouterLigne = document.getElementById("btn-ajouter-ligne")!;
+    const form = document.getElementById("form-commande") as HTMLFormElement;
+    const formStatut = document.getElementById("form-statut") as HTMLFormElement;
+    const tbody = document.getElementById("table-commandes")!;
+    const inputClient = document.getElementById("input-client") as HTMLSelectElement;
+    const lignesContainer = document.getElementById("lignes-container")!;
+    const totalEl = document.getElementById("total-commande")!;
+    const inputStatut = document.getElementById("input-statut") as HTMLSelectElement;
+    const statutCommandeId = document.getElementById("statut-commande-id") as HTMLInputElement;
+
+    const statusLabels: Record<string, string> = {
+        'en_attente': 'En attente',
+        'validee': 'Validee',
+        'en_preparation': 'Preparation',
+        'expediee': 'Expediee',
+        'livree': 'Livree',
+        'annulee': 'Annulee'
+    };
+
+    // Charger les commandes
+    async function loadCommandes() {
+        try {
+            const commandes = await getCommandes();
+
+            if (commandes.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="7" class="px-6 py-16 text-center">
+                            <svg class="w-16 h-16 mx-auto mb-4 text-gray-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                            </svg>
+                            <p class="text-gray-500 font-medium">Aucune commande</p>
+                            <p class="text-gray-400 text-sm mt-1">Les commandes apparaitront ici</p>
+                        </td>
+                    </tr>`;
+                return;
+            }
+
+            tbody.innerHTML = commandes.map(c => {
+                const date = new Date(c.date_commande).toLocaleDateString("fr-FR", {
+                    day: 'numeric',
+                    month: 'short',
+                    year: 'numeric'
+                });
+                const nbArticles = c.lignes.length;
+                return `
+                    <tr class="hover:bg-gray-50/50 transition-colors group">
+                        <td class="table-cell">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 bg-gradient-to-br from-amber-100 to-amber-200 rounded-xl flex items-center justify-center">
+                                    <span class="text-amber-700 font-bold text-sm">#${c.id}</span>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="table-cell">
+                            <span class="text-gray-900 font-medium">Client #${c.client_id}</span>
+                        </td>
+                        <td class="table-cell">
+                            <span class="px-2.5 py-1 bg-gray-100 rounded-lg text-gray-700 text-xs font-medium">${nbArticles} article${nbArticles > 1 ? 's' : ''}</span>
+                        </td>
+                        <td class="table-cell">
+                            <span class="text-lg font-bold text-gray-900">${c.total.toFixed(2)}</span>
+                            <span class="text-gray-500 text-sm">EUR</span>
+                        </td>
+                        <td class="table-cell"><span class="badge badge-${c.statut}">${statusLabels[c.statut] || c.statut}</span></td>
+                        <td class="table-cell text-gray-500">${date}</td>
+                        <td class="table-cell text-right">
+                            <div class="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <button data-statut="${c.id}" data-current="${c.statut}" class="text-indigo-600 hover:text-indigo-800 hover:bg-indigo-50 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors">
+                                    <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                                    </svg>
+                                    Statut
+                                </button>
+                                <button data-delete="${c.id}" class="btn-danger">
+                                    <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                    </svg>
+                                    Supprimer
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }).join("");
+
+            // Event listeners pour statut
+            document.querySelectorAll('[data-statut]').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const target = e.target as HTMLElement;
+                    const id = target.dataset.statut!;
+                    const current = target.dataset.current!;
+                    openStatutModal(parseInt(id), current);
+                });
+            });
+
+            // Event listeners pour supprimer
+            document.querySelectorAll('[data-delete]').forEach(btn => {
+                btn.addEventListener('click', async (e) => {
+                    const id = (e.target as HTMLElement).dataset.delete!;
+                    if (confirm("Voulez-vous vraiment supprimer cette commande ?")) {
+                        try {
+                            await deleteCommande(parseInt(id));
+                            loadCommandes();
+                        } catch {
+                            alert("Erreur lors de la suppression");
+                        }
+                    }
+                });
+            });
+
+        } catch {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="7" class="px-6 py-12 text-center">
+                        <svg class="w-12 h-12 mx-auto mb-3 text-red-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                        </svg>
+                        <p class="text-red-600 font-medium">Erreur de connexion</p>
+                        <p class="text-gray-400 text-sm mt-1">Impossible de charger les commandes</p>
+                    </td>
+                </tr>`;
+        }
+    }
+
+    // Ouvrir modale nouvelle commande
+    async function openModal() {
+        // Charger les clients
+        inputClient.innerHTML = '<option value="">-- Choisir un client --</option>';
+        try {
+            const clients = await getClients();
+            clients.forEach(c => {
+                inputClient.innerHTML += `<option value="${c.id}">${c.nom} ${c.prenom} (${c.email})</option>`;
+            });
+        } catch {
+            alert("Impossible de charger les clients");
+            return;
+        }
+
+        // Charger les produits
+        try {
+            produitsDisponibles = await getProduits();
+        } catch {
+            alert("Impossible de charger les produits");
+            return;
+        }
+
+        lignesContainer.innerHTML = "";
+        ajouterLigne();
+        totalEl.textContent = "0.00 EUR";
+
+        modal.classList.remove("hidden");
+        modal.classList.add("flex");
+    }
+
+    function closeModal() {
+        modal.classList.add("hidden");
+        modal.classList.remove("flex");
+    }
+
+    // Ajouter une ligne d'article
+    function ajouterLigne() {
+        const options = produitsDisponibles.map(p =>
+            `<option value="${p.id}" data-prix="${p.prix}">${p.nom} - ${p.prix.toFixed(2)} EUR</option>`
+        ).join("");
+
+        const ligneHTML = `
+            <div class="flex gap-3 items-center ligne-commande bg-gray-50 rounded-xl p-3">
+                <select name="produit" class="flex-1 input bg-white">
+                    <option value="">-- Choisir un produit --</option>
+                    ${options}
+                </select>
+                <div class="flex items-center gap-2">
+                    <span class="text-xs text-gray-500">Qte:</span>
+                    <input type="number" name="quantite" value="1" min="1" class="w-20 input bg-white text-center">
+                </div>
+                <button type="button" class="btn-supprimer-ligne text-red-400 hover:text-red-600 hover:bg-red-50 p-2 rounded-lg transition-colors">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                    </svg>
+                </button>
+            </div>
+        `;
+
+        lignesContainer.insertAdjacentHTML('beforeend', ligneHTML);
+
+        // Event listeners pour la nouvelle ligne
+        const nouvelleLigne = lignesContainer.lastElementChild!;
+        nouvelleLigne.querySelector('select')!.addEventListener('change', calculerTotal);
+        nouvelleLigne.querySelector('input')!.addEventListener('input', calculerTotal);
+        nouvelleLigne.querySelector('.btn-supprimer-ligne')!.addEventListener('click', (e) => {
+            (e.target as HTMLElement).closest('.ligne-commande')!.remove();
+            calculerTotal();
+        });
+    }
+
+    // Calculer le total
+    function calculerTotal() {
+        const lignes = document.querySelectorAll('.ligne-commande');
+        let total = 0;
+
+        lignes.forEach(ligne => {
+            const select = ligne.querySelector('select[name="produit"]') as HTMLSelectElement;
+            const qteInput = ligne.querySelector('input[name="quantite"]') as HTMLInputElement;
+            const qte = parseInt(qteInput.value) || 0;
+            const option = select.options[select.selectedIndex];
+
+            if (option && option.dataset.prix) {
+                total += parseFloat(option.dataset.prix) * qte;
+            }
+        });
+
+        totalEl.textContent = total.toFixed(2) + " EUR";
+    }
+
+    btnAjouter.addEventListener('click', openModal);
+    btnClose.addEventListener('click', closeModal);
+    btnAnnuler.addEventListener('click', closeModal);
+    btnAjouterLigne.addEventListener('click', ajouterLigne);
+
+    // Soumettre le formulaire de commande
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const clientId = parseInt(inputClient.value);
+        if (!clientId) {
+            alert("Veuillez choisir un client");
+            return;
+        }
+
+        const lignes: LigneCommandeCreate[] = [];
+        document.querySelectorAll('.ligne-commande').forEach(ligne => {
+            const select = ligne.querySelector('select[name="produit"]') as HTMLSelectElement;
+            const qteInput = ligne.querySelector('input[name="quantite"]') as HTMLInputElement;
+            const qte = parseInt(qteInput.value);
+            const option = select.options[select.selectedIndex];
+
+            if (select.value && qte > 0 && option.dataset.prix) {
+                lignes.push({
+                    produit_id: parseInt(select.value),
+                    quantite: qte,
+                    prix_unitaire: parseFloat(option.dataset.prix)
+                });
+            }
+        });
+
+        if (lignes.length === 0) {
+            alert("Ajoutez au moins un article");
+            return;
+        }
+
+        try {
+            await createCommande({ client_id: clientId, lignes });
+            closeModal();
+            loadCommandes();
+        } catch {
+            alert("Erreur lors de la creation de la commande");
+        }
+    });
+
+    // Modale statut
+    function openStatutModal(id: number, currentStatut: string) {
+        statutCommandeId.value = String(id);
+        inputStatut.value = currentStatut;
+        modalStatut.classList.remove("hidden");
+        modalStatut.classList.add("flex");
+    }
+
+    function closeStatutModal() {
+        modalStatut.classList.add("hidden");
+        modalStatut.classList.remove("flex");
+    }
+
+    btnCloseStatut.addEventListener('click', closeStatutModal);
+    btnAnnulerStatut.addEventListener('click', closeStatutModal);
+
+    formStatut.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const id = parseInt(statutCommandeId.value);
+        const statut = inputStatut.value;
+
+        try {
+            await updateCommande(id, { statut });
+            closeStatutModal();
+            loadCommandes();
+        } catch {
+            alert("Erreur lors du changement de statut");
+        }
+    });
+
+    // Charger au demarrage
+    loadCommandes();
+</script>

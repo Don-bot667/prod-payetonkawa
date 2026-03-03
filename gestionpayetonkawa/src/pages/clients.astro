@@ -1,0 +1,239 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout title="Clients" currentPage="clients">
+    <header class="bg-white border-b border-gray-100 px-8 py-6 flex items-center justify-between">
+        <div>
+            <h2 class="text-2xl font-bold text-gray-900">Clients</h2>
+            <p class="text-gray-500 text-sm mt-1">Gestion des clients enregistres</p>
+        </div>
+        <button id="btn-ajouter" class="btn-primary">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+            </svg>
+            Ajouter un client
+        </button>
+    </header>
+
+    <div class="p-8">
+        <div class="card">
+            <div class="overflow-x-auto">
+                <table class="w-full">
+                    <thead class="table-header">
+                        <tr>
+                            <th class="px-6 py-4">ID</th>
+                            <th class="px-6 py-4">Client</th>
+                            <th class="px-6 py-4">Email</th>
+                            <th class="px-6 py-4">Telephone</th>
+                            <th class="px-6 py-4">Adresse</th>
+                            <th class="px-6 py-4 text-right">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="table-clients" class="divide-y divide-gray-100 text-sm">
+                        <tr>
+                            <td colspan="6" class="px-6 py-12 text-center text-gray-400">
+                                <svg class="w-8 h-8 mx-auto mb-2 animate-spin text-gray-300" fill="none" viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                                Chargement...
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODALE : Formulaire d'ajout -->
+    <div id="modal" class="modal-backdrop fixed inset-0 bg-black/50 backdrop-blur-sm hidden items-center justify-center z-50">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg mx-4 overflow-hidden">
+            <div class="bg-gradient-to-r from-indigo-600 to-indigo-700 px-6 py-5">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
+                            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                            </svg>
+                        </div>
+                        <h3 class="text-lg font-semibold text-white">Nouveau client</h3>
+                    </div>
+                    <button id="btn-close-modal" class="text-white/70 hover:text-white transition p-1">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+            <form id="form-client" class="p-6 space-y-5">
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Nom</label>
+                        <input type="text" id="input-nom" required class="input" placeholder="Dupont">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Prenom</label>
+                        <input type="text" id="input-prenom" required class="input" placeholder="Jean">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                    <input type="email" id="input-email" required class="input" placeholder="jean.dupont@email.com">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Mot de passe</label>
+                    <input type="password" id="input-mot-de-passe" required class="input" placeholder="4 caracteres minimum">
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Telephone</label>
+                        <input type="text" id="input-telephone" class="input" placeholder="06 12 34 56 78">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Adresse</label>
+                        <input type="text" id="input-adresse" class="input" placeholder="123 Rue du Cafe, Paris">
+                    </div>
+                </div>
+                <div class="flex justify-end gap-3 pt-4 border-t border-gray-100">
+                    <button type="button" id="btn-annuler" class="btn-secondary">Annuler</button>
+                    <button type="submit" class="btn-primary">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                        </svg>
+                        Enregistrer
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</Layout>
+
+<script>
+    import { getClients, createClient, deleteClient, type ClientCreate } from '../lib/api';
+
+    const modal = document.getElementById("modal")!;
+    const btnAjouter = document.getElementById("btn-ajouter")!;
+    const btnClose = document.getElementById("btn-close-modal")!;
+    const btnAnnuler = document.getElementById("btn-annuler")!;
+    const form = document.getElementById("form-client") as HTMLFormElement;
+    const tbody = document.getElementById("table-clients")!;
+
+    // Charger les clients
+    async function loadClients() {
+        try {
+            const clients = await getClients();
+
+            if (clients.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="6" class="px-6 py-16 text-center">
+                            <svg class="w-16 h-16 mx-auto mb-4 text-gray-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
+                            </svg>
+                            <p class="text-gray-500 font-medium">Aucun client enregistre</p>
+                            <p class="text-gray-400 text-sm mt-1">Commencez par ajouter votre premier client</p>
+                        </td>
+                    </tr>`;
+                return;
+            }
+
+            tbody.innerHTML = clients.map(c => `
+                <tr class="hover:bg-gray-50/50 transition-colors group">
+                    <td class="table-cell">
+                        <span class="inline-flex items-center justify-center w-8 h-8 bg-indigo-100 text-indigo-700 rounded-lg text-xs font-bold">${c.id}</span>
+                    </td>
+                    <td class="table-cell">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 bg-gradient-to-br from-gray-100 to-gray-200 rounded-full flex items-center justify-center text-gray-600 font-semibold text-sm">
+                                ${c.prenom.charAt(0)}${c.nom.charAt(0)}
+                            </div>
+                            <div>
+                                <p class="font-semibold text-gray-900">${c.prenom} ${c.nom}</p>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="table-cell text-gray-600">${c.email}</td>
+                    <td class="table-cell text-gray-600">${c.telephone || '-'}</td>
+                    <td class="table-cell text-gray-500 text-sm">${c.adresse || '-'}</td>
+                    <td class="table-cell text-right">
+                        <button data-delete="${c.id}" class="btn-danger opacity-0 group-hover:opacity-100 transition-opacity">
+                            <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                            </svg>
+                            Supprimer
+                        </button>
+                    </td>
+                </tr>
+            `).join("");
+
+            // Ajouter les event listeners pour les boutons supprimer
+            document.querySelectorAll('[data-delete]').forEach(btn => {
+                btn.addEventListener('click', async (e) => {
+                    const id = (e.target as HTMLElement).dataset.delete!;
+                    if (confirm("Voulez-vous vraiment supprimer ce client ?")) {
+                        try {
+                            await deleteClient(parseInt(id));
+                            loadClients();
+                        } catch {
+                            alert("Erreur lors de la suppression");
+                        }
+                    }
+                });
+            });
+
+        } catch {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="6" class="px-6 py-12 text-center">
+                        <svg class="w-12 h-12 mx-auto mb-3 text-red-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                        </svg>
+                        <p class="text-red-600 font-medium">Erreur de connexion</p>
+                        <p class="text-gray-400 text-sm mt-1">Impossible de charger les clients</p>
+                    </td>
+                </tr>`;
+        }
+    }
+
+    // Ouvrir/fermer la modale
+    function openModal() {
+        modal.classList.remove("hidden");
+        modal.classList.add("flex");
+    }
+
+    function closeModal() {
+        modal.classList.add("hidden");
+        modal.classList.remove("flex");
+        form.reset();
+    }
+
+    btnAjouter.addEventListener('click', openModal);
+    btnClose.addEventListener('click', closeModal);
+    btnAnnuler.addEventListener('click', closeModal);
+
+    // Soumettre le formulaire
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const data: ClientCreate = {
+            nom: (document.getElementById("input-nom") as HTMLInputElement).value,
+            prenom: (document.getElementById("input-prenom") as HTMLInputElement).value,
+            email: (document.getElementById("input-email") as HTMLInputElement).value,
+            mot_de_passe: (document.getElementById("input-mot-de-passe") as HTMLInputElement).value,
+            telephone: (document.getElementById("input-telephone") as HTMLInputElement).value || undefined,
+            adresse: (document.getElementById("input-adresse") as HTMLInputElement).value || undefined
+        };
+
+        try {
+            await createClient(data);
+            closeModal();
+            loadClients();
+        } catch {
+            alert("Erreur lors de la creation du client");
+        }
+    });
+
+    // Charger au demarrage
+    loadClients();
+</script>

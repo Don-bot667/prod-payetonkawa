@@ -1,0 +1,332 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout title="Produits" currentPage="produits">
+    <header class="bg-white border-b border-gray-100 px-8 py-6 flex items-center justify-between">
+        <div>
+            <h2 class="text-2xl font-bold text-gray-900">Produits</h2>
+            <p class="text-gray-500 text-sm mt-1">Catalogue des cafes disponibles</p>
+        </div>
+        <button id="btn-ajouter" class="btn-primary">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+            </svg>
+            Ajouter un produit
+        </button>
+    </header>
+
+    <div class="p-8">
+        <div class="card">
+            <div class="overflow-x-auto">
+                <table class="w-full">
+                    <thead class="table-header">
+                        <tr>
+                            <th class="px-6 py-4">Produit</th>
+                            <th class="px-6 py-4">Prix</th>
+                            <th class="px-6 py-4">Stock</th>
+                            <th class="px-6 py-4">Origine</th>
+                            <th class="px-6 py-4">Poids</th>
+                            <th class="px-6 py-4 text-right">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="table-produits" class="divide-y divide-gray-100 text-sm">
+                        <tr>
+                            <td colspan="6" class="px-6 py-12 text-center text-gray-400">
+                                <svg class="w-8 h-8 mx-auto mb-2 animate-spin text-gray-300" fill="none" viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                                Chargement...
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODALE : Formulaire d'ajout/modification -->
+    <div id="modal" class="modal-backdrop fixed inset-0 bg-black/50 backdrop-blur-sm hidden items-center justify-center z-50">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg mx-4 overflow-hidden">
+            <div class="bg-gradient-to-r from-emerald-600 to-emerald-700 px-6 py-5">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
+                            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+                            </svg>
+                        </div>
+                        <h3 id="modal-title" class="text-lg font-semibold text-white">Nouveau produit</h3>
+                    </div>
+                    <button id="btn-close-modal" class="text-white/70 hover:text-white transition p-1">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+            <form id="form-produit" class="p-6 space-y-5">
+                <input type="hidden" id="input-id">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Nom du cafe</label>
+                    <input type="text" id="input-nom" required class="input" placeholder="Arabica Premium">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Description</label>
+                    <textarea id="input-description" rows="2" class="input" placeholder="Un cafe aux aromes subtils..."></textarea>
+                </div>
+                <div class="grid grid-cols-3 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Prix (EUR)</label>
+                        <input type="number" step="0.01" id="input-prix" required class="input" placeholder="12.90">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Stock</label>
+                        <input type="number" id="input-stock" value="0" class="input">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Poids (kg)</label>
+                        <input type="number" step="0.01" id="input-poids" value="1.0" class="input">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Origine</label>
+                    <input type="text" id="input-origine" class="input" placeholder="Bresil, Colombie, Ethiopie...">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Photo du produit</label>
+                    <div id="image-preview-container" class="hidden mb-2">
+                        <img id="image-preview" src="" alt="Apercu" class="w-20 h-20 object-cover rounded-lg border border-gray-200">
+                    </div>
+                    <input type="file" id="input-image" accept="image/jpeg,image/png,image/webp" class="block w-full text-sm text-gray-600 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100">
+                    <p class="text-xs text-gray-400 mt-1">Formats acceptes : JPG, PNG, WEBP</p>
+                </div>
+                <div class="flex justify-end gap-3 pt-4 border-t border-gray-100">
+                    <button type="button" id="btn-annuler" class="btn-secondary">Annuler</button>
+                    <button type="submit" class="btn-primary bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                        </svg>
+                        Enregistrer
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</Layout>
+
+<script>
+    import { getProduits, getProduit, createProduit, updateProduit, deleteProduit, uploadProductImage, type ProduitCreate } from '../lib/api';
+
+    let editMode = false;
+
+    const modal = document.getElementById("modal")!;
+    const modalTitle = document.getElementById("modal-title")!;
+    const btnAjouter = document.getElementById("btn-ajouter")!;
+    const btnClose = document.getElementById("btn-close-modal")!;
+    const btnAnnuler = document.getElementById("btn-annuler")!;
+    const form = document.getElementById("form-produit") as HTMLFormElement;
+    const tbody = document.getElementById("table-produits")!;
+
+    const inputId = document.getElementById("input-id") as HTMLInputElement;
+    const inputNom = document.getElementById("input-nom") as HTMLInputElement;
+    const inputDescription = document.getElementById("input-description") as HTMLTextAreaElement;
+    const inputPrix = document.getElementById("input-prix") as HTMLInputElement;
+    const inputStock = document.getElementById("input-stock") as HTMLInputElement;
+    const inputPoids = document.getElementById("input-poids") as HTMLInputElement;
+    const inputOrigine = document.getElementById("input-origine") as HTMLInputElement;
+    const inputImage = document.getElementById("input-image") as HTMLInputElement;
+    const imagePreview = document.getElementById("image-preview") as HTMLImageElement;
+    const imagePreviewContainer = document.getElementById("image-preview-container")!;
+
+    // Apercu de l'image selectionnee
+    inputImage.addEventListener("change", () => {
+        const file = inputImage.files?.[0];
+        if (file) {
+            imagePreview.src = URL.createObjectURL(file);
+            imagePreviewContainer.classList.remove("hidden");
+        } else {
+            imagePreviewContainer.classList.add("hidden");
+        }
+    });
+
+    // Charger les produits
+    async function loadProduits() {
+        try {
+            const produits = await getProduits();
+
+            if (produits.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="6" class="px-6 py-16 text-center">
+                            <svg class="w-16 h-16 mx-auto mb-4 text-gray-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+                            </svg>
+                            <p class="text-gray-500 font-medium">Aucun produit en catalogue</p>
+                            <p class="text-gray-400 text-sm mt-1">Commencez par ajouter votre premier cafe</p>
+                        </td>
+                    </tr>`;
+                return;
+            }
+
+            tbody.innerHTML = produits.map(p => {
+                const stockClass = p.stock === 0 ? 'text-red-600 bg-red-50' : p.stock < 10 ? 'text-amber-600 bg-amber-50' : 'text-emerald-600 bg-emerald-50';
+                return `
+                <tr class="hover:bg-gray-50/50 transition-colors group">
+                    <td class="table-cell">
+                        <div class="flex items-center gap-4">
+                            <div class="w-12 h-12 bg-gradient-to-br from-amber-100 to-amber-200 rounded-xl flex items-center justify-center overflow-hidden flex-shrink-0">
+                                ${p.image_url
+                                    ? `<img src="http://localhost:8001${p.image_url}" alt="${p.nom}" class="w-full h-full object-cover">`
+                                    : `<svg class="w-6 h-6 text-amber-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>`
+                                }
+                            </div>
+                            <div>
+                                <p class="font-semibold text-gray-900">${p.nom}</p>
+                                <p class="text-xs text-gray-500">${p.description || 'Aucune description'}</p>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="table-cell">
+                        <span class="text-lg font-bold text-gray-900">${p.prix.toFixed(2)}</span>
+                        <span class="text-gray-500 text-sm">EUR</span>
+                    </td>
+                    <td class="table-cell">
+                        <span class="px-3 py-1 rounded-full text-xs font-semibold ${stockClass}">${p.stock} unites</span>
+                    </td>
+                    <td class="table-cell text-gray-600">${p.origine || '-'}</td>
+                    <td class="table-cell text-gray-600">${p.poids_kg} kg</td>
+                    <td class="table-cell text-right">
+                        <div class="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <button data-edit="${p.id}" class="text-indigo-600 hover:text-indigo-800 hover:bg-indigo-50 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors">
+                                <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                                </svg>
+                                Modifier
+                            </button>
+                            <button data-delete="${p.id}" class="btn-danger">
+                                <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                </svg>
+                                Supprimer
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `}).join("");
+
+            // Event listeners pour modifier
+            document.querySelectorAll('[data-edit]').forEach(btn => {
+                btn.addEventListener('click', async (e) => {
+                    const id = parseInt((e.target as HTMLElement).dataset.edit!);
+                    await openEditModal(id);
+                });
+            });
+
+            // Event listeners pour supprimer
+            document.querySelectorAll('[data-delete]').forEach(btn => {
+                btn.addEventListener('click', async (e) => {
+                    const id = (e.target as HTMLElement).dataset.delete!;
+                    if (confirm("Voulez-vous vraiment supprimer ce produit ?")) {
+                        try {
+                            await deleteProduit(parseInt(id));
+                            loadProduits();
+                        } catch {
+                            alert("Erreur lors de la suppression");
+                        }
+                    }
+                });
+            });
+
+        } catch {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="6" class="px-6 py-12 text-center">
+                        <svg class="w-12 h-12 mx-auto mb-3 text-red-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                        </svg>
+                        <p class="text-red-600 font-medium">Erreur de connexion</p>
+                        <p class="text-gray-400 text-sm mt-1">Impossible de charger les produits</p>
+                    </td>
+                </tr>`;
+        }
+    }
+
+    // Ouvrir modale en mode ajout
+    function openModal() {
+        editMode = false;
+        modalTitle.textContent = "Nouveau produit";
+        form.reset();
+        inputStock.value = "0";
+        inputPoids.value = "1.0";
+        modal.classList.remove("hidden");
+        modal.classList.add("flex");
+    }
+
+    // Ouvrir modale en mode modification
+    async function openEditModal(id: number) {
+        editMode = true;
+        modalTitle.textContent = "Modifier le produit";
+
+        const p = await getProduit(id);
+        inputId.value = String(p.id);
+        inputNom.value = p.nom;
+        inputDescription.value = p.description || "";
+        inputPrix.value = String(p.prix);
+        inputStock.value = String(p.stock);
+        inputPoids.value = String(p.poids_kg);
+        inputOrigine.value = p.origine || "";
+
+        modal.classList.remove("hidden");
+        modal.classList.add("flex");
+    }
+
+    function closeModal() {
+        modal.classList.add("hidden");
+        modal.classList.remove("flex");
+        inputImage.value = "";
+        imagePreviewContainer.classList.add("hidden");
+    }
+
+    btnAjouter.addEventListener('click', openModal);
+    btnClose.addEventListener('click', closeModal);
+    btnAnnuler.addEventListener('click', closeModal);
+
+    // Soumettre le formulaire
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const data: ProduitCreate = {
+            nom: inputNom.value,
+            description: inputDescription.value || undefined,
+            prix: parseFloat(inputPrix.value),
+            stock: parseInt(inputStock.value),
+            poids_kg: parseFloat(inputPoids.value),
+            origine: inputOrigine.value || undefined
+        };
+
+        try {
+            let savedProduit;
+            if (editMode) {
+                savedProduit = await updateProduit(parseInt(inputId.value), data);
+            } else {
+                savedProduit = await createProduit(data);
+            }
+
+            // Uploader l'image si une est selectionnee
+            const imageFile = inputImage.files?.[0];
+            if (imageFile && savedProduit?.id) {
+                await uploadProductImage(savedProduit.id, imageFile);
+            }
+
+            closeModal();
+            loadProduits();
+        } catch {
+            alert("Erreur lors de l'enregistrement");
+        }
+    });
+
+    // Charger au demarrage
+    loadProduits();
+</script>

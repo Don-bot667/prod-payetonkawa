@@ -1,0 +1,157 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout title="Panier">
+    <section class="py-12">
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+            <h1 class="text-3xl font-bold text-gray-900 mb-8">Mon panier</h1>
+
+            <div id="cart-container">
+                <!-- Charge par JavaScript -->
+            </div>
+        </div>
+    </section>
+</Layout>
+
+<script>
+    import { getCart, updateQuantity, removeFromCart, clearCart, getCartTotal } from '../lib/cart';
+    import { getUser } from '../lib/auth';
+    import { createCommande, type LigneCommandeCreate } from '../lib/api';
+
+    function renderCart() {
+        const container = document.getElementById('cart-container');
+        if (!container) return;
+
+        const cart = getCart();
+
+        if (cart.length === 0) {
+            container.innerHTML = `
+                <div class="text-center py-16">
+                    <p class="text-gray-500 text-lg mb-4">Votre panier est vide</p>
+                    <a href="/produits" class="btn-primary inline-block">Decouvrir nos cafes</a>
+                </div>
+            `;
+            return;
+        }
+
+        const total = getCartTotal();
+
+        container.innerHTML = `
+            <div class="bg-white rounded-2xl shadow-sm border overflow-hidden">
+                <!-- Liste des articles -->
+                <div class="divide-y">
+                    ${cart.map(item => `
+                        <div class="p-6 flex items-center gap-6" data-item="${item.produit_id}">
+                            <div class="w-20 h-20 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
+                                <img src="${item.image || 'https://images.unsplash.com/photo-1559056199-641a0ac8b55e?w=200&q=80'}"
+                                     alt="${item.nom}" class="w-full h-full object-cover" />
+                            </div>
+                            <div class="flex-grow">
+                                <h3 class="font-semibold text-gray-900">${item.nom}</h3>
+                                <p class="text-marron-600 font-medium">${item.prix.toFixed(2)} EUR</p>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <button class="qty-minus w-8 h-8 rounded-full border flex items-center justify-center hover:bg-gray-100">-</button>
+                                <span class="w-8 text-center">${item.quantite}</span>
+                                <button class="qty-plus w-8 h-8 rounded-full border flex items-center justify-center hover:bg-gray-100">+</button>
+                            </div>
+                            <div class="text-right">
+                                <p class="font-semibold">${(item.prix * item.quantite).toFixed(2)} EUR</p>
+                                <button class="remove-item text-sm text-red-600 hover:text-red-800">Supprimer</button>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+
+                <!-- Total et actions -->
+                <div class="bg-gray-50 p-6">
+                    <div class="flex justify-between items-center mb-6">
+                        <span class="text-lg font-medium">Total</span>
+                        <span class="text-2xl font-bold text-marron-600">${total.toFixed(2)} EUR</span>
+                    </div>
+                    <div class="flex gap-4">
+                        <button id="clear-cart" class="px-4 py-2 text-gray-600 border rounded-lg hover:bg-gray-100 transition">
+                            Vider le panier
+                        </button>
+                        <button id="checkout" class="flex-1 btn-primary">
+                            Passer commande
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        // Event listeners
+        container.querySelectorAll('.qty-minus').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const item = (e.target as HTMLElement).closest('[data-item]') as HTMLElement;
+                const id = parseInt(item.dataset.item!);
+                const current = cart.find(i => i.produit_id === id);
+                if (current && current.quantite > 1) {
+                    updateQuantity(id, current.quantite - 1);
+                    renderCart();
+                }
+            });
+        });
+
+        container.querySelectorAll('.qty-plus').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const item = (e.target as HTMLElement).closest('[data-item]') as HTMLElement;
+                const id = parseInt(item.dataset.item!);
+                const current = cart.find(i => i.produit_id === id);
+                if (current) {
+                    updateQuantity(id, current.quantite + 1);
+                    renderCart();
+                }
+            });
+        });
+
+        container.querySelectorAll('.remove-item').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const item = (e.target as HTMLElement).closest('[data-item]') as HTMLElement;
+                const id = parseInt(item.dataset.item!);
+                removeFromCart(id);
+                renderCart();
+            });
+        });
+
+        document.getElementById('clear-cart')?.addEventListener('click', () => {
+            if (confirm('Vider le panier ?')) {
+                clearCart();
+                renderCart();
+            }
+        });
+
+        document.getElementById('checkout')?.addEventListener('click', async () => {
+            const user = getUser();
+            if (!user) {
+                alert('Veuillez vous connecter pour passer commande');
+                window.location.href = '/connexion';
+                return;
+            }
+
+            const cartItems = getCart();
+            const lignes: LigneCommandeCreate[] = cartItems.map(item => ({
+                produit_id: item.produit_id,
+                quantite: item.quantite,
+                prix_unitaire: item.prix
+            }));
+
+            try {
+                await createCommande({
+                    client_id: user.id,
+                    lignes
+                });
+                clearCart();
+                alert('Commande passee avec succes !');
+                window.location.href = '/compte';
+            } catch (error) {
+                alert('Erreur lors de la commande. Veuillez reessayer.');
+            }
+        });
+    }
+
+    renderCart();
+    window.addEventListener('cart-updated', renderCart);
+</script>

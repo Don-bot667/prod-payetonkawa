@@ -1,0 +1,157 @@
+---
+import Layout from '../../layouts/Layout.astro';
+
+const { id } = Astro.params;
+---
+
+<Layout title="Detail produit">
+    <section class="py-12">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div id="product-detail" class="grid md:grid-cols-2 gap-12" data-id={id}>
+                <div class="text-center py-12 text-gray-500 md:col-span-2">
+                    Chargement du produit...
+                </div>
+            </div>
+        </div>
+    </section>
+</Layout>
+
+<script>
+    import { getProduit } from '../../lib/api';
+    import { addToCart } from '../../lib/cart';
+
+    const placeholderImages = [
+        "/img/image_de_graine_de_cafe.jpg",
+        "https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?w=800&q=80",
+        "https://images.unsplash.com/photo-1497935586351-b67a49e012bf?w=800&q=80",
+        "https://images.unsplash.com/photo-1511920170033-f8396924c348?w=800&q=80",
+    ];
+
+    async function loadProduct() {
+        const container = document.getElementById('product-detail');
+        if (!container) return;
+
+        // Lire l'id depuis data-id OU depuis l'URL en fallback
+        let rawId = container.dataset.id;
+        if (!rawId || rawId === 'undefined') {
+            const segments = window.location.pathname.split('/');
+            rawId = segments[segments.length - 1];
+        }
+
+        const id = parseInt(rawId || '0');
+        if (!id || isNaN(id)) {
+            container.innerHTML = `
+                <div class="text-center py-12 md:col-span-2">
+                    <p class="text-red-500 text-lg font-medium mb-4">Produit non trouve</p>
+                    <a href="/produits" class="btn-primary">Voir tous les cafes</a>
+                </div>`;
+            return;
+        }
+
+        try {
+            const p = await getProduit(id);
+            const image = p.image_url
+                ? 'http://localhost:8001' + p.image_url
+                : placeholderImages[id % placeholderImages.length];
+
+            container.innerHTML = `
+                <!-- Image -->
+                <div class="aspect-square rounded-2xl overflow-hidden bg-gray-100">
+                    <img src="${image}" alt="${p.nom}" class="w-full h-full object-cover" />
+                </div>
+
+                <!-- Infos -->
+                <div class="flex flex-col justify-center">
+                    <nav class="text-sm text-gray-500 mb-4">
+                        <a href="/" class="hover:text-marron-600">Accueil</a>
+                        <span class="mx-2">/</span>
+                        <a href="/produits" class="hover:text-marron-600">Nos Cafes</a>
+                        <span class="mx-2">/</span>
+                        <span>${p.nom}</span>
+                    </nav>
+
+                    <h1 class="text-3xl font-bold text-gray-900 mb-2">${p.nom}</h1>
+
+                    ${p.origine ? `<p class="text-gray-600 mb-4">Origine : <span class="font-medium">${p.origine}</span></p>` : ''}
+
+                    ${p.description ? `<p class="text-gray-600 mb-6">${p.description}</p>` : '<p class="text-gray-600 mb-6">Un cafe d\'exception aux aromes subtils et complexes.</p>'}
+
+                    <div class="flex items-center gap-4 mb-6">
+                        <span class="text-3xl font-bold text-marron-600">${parseFloat(String(p.prix)).toFixed(2)} EUR</span>
+                        <span class="text-sm text-gray-500">/ ${p.poids_kg} kg</span>
+                    </div>
+
+                    <p class="text-sm ${p.stock > 0 ? 'text-green-600' : 'text-red-600'} mb-6">
+                        ${p.stock > 0 ? `En stock (${p.stock} disponibles)` : 'Rupture de stock'}
+                    </p>
+
+                    <div class="flex items-center gap-4">
+                        <div class="flex items-center border rounded-lg">
+                            <button id="btn-minus" class="px-4 py-2 text-gray-600 hover:bg-gray-100">-</button>
+                            <input id="quantity" type="number" value="1" min="1" max="${p.stock}"
+                                   class="w-16 text-center border-0 focus:ring-0" />
+                            <button id="btn-plus" class="px-4 py-2 text-gray-600 hover:bg-gray-100">+</button>
+                        </div>
+                        <button
+                            id="add-to-cart"
+                            class="flex-1 btn-primary ${p.stock === 0 ? 'opacity-50 cursor-not-allowed' : ''}"
+                            ${p.stock === 0 ? 'disabled' : ''}
+                            data-id="${p.id}"
+                            data-nom="${p.nom}"
+                            data-prix="${p.prix}"
+                        >
+                            Ajouter au panier
+                        </button>
+                    </div>
+                </div>
+            `;
+
+            const qtyInput = document.getElementById('quantity') as HTMLInputElement;
+            const btnMinus = document.getElementById('btn-minus');
+            const btnPlus = document.getElementById('btn-plus');
+            const btnAdd = document.getElementById('add-to-cart');
+
+            btnMinus?.addEventListener('click', () => {
+                const val = parseInt(qtyInput.value);
+                if (val > 1) qtyInput.value = String(val - 1);
+            });
+
+            btnPlus?.addEventListener('click', () => {
+                const val = parseInt(qtyInput.value);
+                if (val < p.stock) qtyInput.value = String(val + 1);
+            });
+
+            btnAdd?.addEventListener('click', () => {
+                const qty = parseInt(qtyInput.value);
+                addToCart({
+                    produit_id: p.id,
+                    nom: p.nom,
+                    prix: p.prix,
+                    image: image
+                }, qty);
+
+                if (btnAdd) {
+                    btnAdd.textContent = 'Ajoute au panier !';
+                    btnAdd.classList.add('bg-green-600');
+                    setTimeout(() => {
+                        btnAdd.textContent = 'Ajouter au panier';
+                        btnAdd.classList.remove('bg-green-600');
+                    }, 1500);
+                }
+            });
+
+        } catch (error) {
+            container.innerHTML = `
+                <div class="text-center py-12 md:col-span-2">
+                    <p class="text-red-500 text-lg font-medium mb-2">Impossible de charger ce produit</p>
+                    <p class="text-gray-500 text-sm mb-6">
+                        Verifiez que l'API produits est demarree sur le port 8001.<br/>
+                        Commande : <code class="bg-gray-100 px-2 py-1 rounded">docker compose up</code>
+                    </p>
+                    <a href="/produits" class="btn-primary">Retour au catalogue</a>
+                </div>`;
+        }
+    }
+
+    loadProduct();
+</script>

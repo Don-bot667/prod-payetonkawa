@@ -1,0 +1,23 @@
+services:
+  db-produits:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: faouz
+      POSTGRES_PASSWORD: faouz2020
+      POSTGRES_DB: produits_db
+    ports:
+      - "5437:5432"
+    volumes:
+      - db_produits_data:/var/lib/postgresql/data
+
+  api-produits:
+    build: .
+    ports:
+      - "8001:8000"
+    environment:
+      DATABASE_URL: postgresql://faouz:faouz2020@db-produits:5432/produits_db
+    depends_on:
+      - db-produits
+
+volumes:
+  db_produits_data:

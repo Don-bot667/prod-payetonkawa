@@ -1,0 +1,23 @@
+services:
+  db-clients:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: faouz
+      POSTGRES_PASSWORD: faouz2020
+      POSTGRES_DB: clients_db
+    ports:
+      - "5436:5432"
+    volumes:
+      - db_clients_data:/var/lib/postgresql/data
+
+  api-clients:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_URL: postgresql://faouz:faouz2020@db-clients:5432/clients_db
+    depends_on:
+      - db-clients
+
+volumes:
+  db_clients_data:

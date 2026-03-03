@@ -1,0 +1,132 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout title="Mon compte">
+    <section class="py-12">
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div id="account-container">
+                <div class="text-center py-12 text-gray-500">Chargement...</div>
+            </div>
+        </div>
+    </section>
+</Layout>
+
+<script>
+    import { getUser, logout } from '../lib/auth';
+    import { getCommandesByClient } from '../lib/api';
+
+    async function loadAccount() {
+        const container = document.getElementById('account-container');
+        if (!container) return;
+
+        const user = getUser();
+
+        if (!user) {
+            window.location.href = '/connexion';
+            return;
+        }
+
+        let commandes: any[] = [];
+        try {
+            commandes = await getCommandesByClient(user.id);
+        } catch (error) {
+            console.error('Erreur chargement commandes:', error);
+        }
+
+        const statusColors: Record<string, string> = {
+            'en_attente': 'bg-yellow-100 text-yellow-800',
+            'validee': 'bg-green-100 text-green-800',
+            'en_preparation': 'bg-blue-100 text-blue-800',
+            'expediee': 'bg-purple-100 text-purple-800',
+            'livree': 'bg-green-100 text-green-800',
+            'annulee': 'bg-red-100 text-red-800'
+        };
+
+        container.innerHTML = `
+            <div class="mb-8">
+                <h1 class="text-3xl font-bold text-gray-900">Bonjour, ${user.prenom} !</h1>
+                <p class="text-gray-600 mt-1">${user.email}</p>
+            </div>
+
+            <!-- Infos compte -->
+            <div class="bg-white rounded-2xl shadow-sm border p-6 mb-8">
+                <h2 class="text-xl font-semibold mb-4">Mes informations</h2>
+                <div class="grid grid-cols-2 gap-4 text-sm">
+                    <div>
+                        <span class="text-gray-500">Nom :</span>
+                        <span class="font-medium ml-2">${user.nom}</span>
+                    </div>
+                    <div>
+                        <span class="text-gray-500">Prenom :</span>
+                        <span class="font-medium ml-2">${user.prenom}</span>
+                    </div>
+                    <div>
+                        <span class="text-gray-500">Email :</span>
+                        <span class="font-medium ml-2">${user.email}</span>
+                    </div>
+                    <div>
+                        <span class="text-gray-500">Telephone :</span>
+                        <span class="font-medium ml-2">${user.telephone || '-'}</span>
+                    </div>
+                    <div class="col-span-2">
+                        <span class="text-gray-500">Adresse :</span>
+                        <span class="font-medium ml-2">${user.adresse || '-'}</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Commandes -->
+            <div class="bg-white rounded-2xl shadow-sm border overflow-hidden">
+                <div class="p-6 border-b">
+                    <h2 class="text-xl font-semibold">Mes commandes</h2>
+                </div>
+
+                ${commandes.length === 0 ? `
+                    <div class="p-12 text-center text-gray-500">
+                        <p>Vous n'avez pas encore passe de commande</p>
+                        <a href="/produits" class="btn-primary inline-block mt-4">Decouvrir nos cafes</a>
+                    </div>
+                ` : `
+                    <div class="divide-y">
+                        ${commandes.map(cmd => `
+                            <div class="p-6">
+                                <div class="flex items-center justify-between mb-2">
+                                    <span class="font-semibold">Commande #${cmd.id}</span>
+                                    <span class="px-3 py-1 rounded-full text-xs font-medium ${statusColors[cmd.statut] || 'bg-gray-100'}">
+                                        ${cmd.statut}
+                                    </span>
+                                </div>
+                                <div class="text-sm text-gray-600 mb-2">
+                                    ${new Date(cmd.date_commande).toLocaleDateString('fr-FR', {
+                                        day: 'numeric',
+                                        month: 'long',
+                                        year: 'numeric'
+                                    })}
+                                </div>
+                                <div class="flex justify-between items-center">
+                                    <span class="text-sm text-gray-500">${cmd.lignes.length} article(s)</span>
+                                    <span class="font-bold text-marron-600">${cmd.total.toFixed(2)} EUR</span>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                `}
+            </div>
+
+            <!-- Deconnexion -->
+            <div class="mt-8 text-center">
+                <button id="btn-logout" class="text-red-600 hover:text-red-800 font-medium">
+                    Se deconnecter
+                </button>
+            </div>
+        `;
+
+        document.getElementById('btn-logout')?.addEventListener('click', () => {
+            logout();
+            window.location.href = '/';
+        });
+    }
+
+    loadAccount();
+</script>

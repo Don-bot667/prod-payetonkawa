@@ -1,0 +1,46 @@
+@import "tailwindcss";
+
+/* Palette cafe / marron personnalisee */
+@theme {
+    --color-marron-50: #fdf6ef;
+    --color-marron-100: #f5e6d3;
+    --color-marron-200: #e8d0b0;
+    --color-marron-300: #d4a574;
+    --color-marron-400: #c07d45;
+    --color-marron-500: #a85f28;
+    --color-marron-600: #8B4513;
+    --color-marron-700: #6e3610;
+    --color-marron-800: #52290c;
+    --color-marron-900: #3a1d08;
+}
+
+/* Police */
+body {
+    font-family: 'Inter', system-ui, sans-serif;
+}
+
+/* Animations */
+.fade-in {
+    animation: fadeIn 0.3s ease-in;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Boutons */
+.btn-primary {
+    @apply bg-marron-600 text-white px-6 py-3 rounded-lg font-medium
+           hover:bg-marron-700 transition-colors duration-200;
+}
+
+.btn-secondary {
+    @apply border-2 border-marron-600 text-marron-600 px-6 py-3 rounded-lg font-medium
+           hover:bg-marron-600 hover:text-white transition-colors duration-200;
+}
+
+/* Card hover */
+.product-card {
+    @apply transition-transform duration-200 hover:scale-105;
+}

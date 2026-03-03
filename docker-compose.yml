@@ -1,0 +1,119 @@
+services:
+  # === BASES DE DONNÉES ===
+  db-clients:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: faouz
+      POSTGRES_PASSWORD: faouz2020
+      POSTGRES_DB: clients_db
+    ports:
+      - "5436:5432"
+    volumes:
+      - db_clients_data:/var/lib/postgresql/data
+
+  db-produits:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: faouz
+      POSTGRES_PASSWORD: faouz2020
+      POSTGRES_DB: produits_db
+    ports:
+      - "5437:5432"
+    volumes:
+      - db_produits_data:/var/lib/postgresql/data
+
+  db-commandes:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: faouz
+      POSTGRES_PASSWORD: faouz2020
+      POSTGRES_DB: commandes_db
+    ports:
+      - "5438:5432"
+    volumes:
+      - db_commandes_data:/var/lib/postgresql/data
+
+  # === APIs ===
+  api-clients:
+    build: ./api-clients
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_URL: postgresql://faouz:faouz2020@db-clients:5432/clients_db
+      API_KEY: secret_key_123
+      ALLOWED_ORIGINS: "http://localhost:3000,http://localhost:4321,http://localhost:4322"
+      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672/
+    depends_on:
+      - db-clients
+      - rabbitmq
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health').read()"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  api-produits:
+    build: ./api-produits
+    ports:
+      - "8001:8000"
+    environment:
+      DATABASE_URL: postgresql://faouz:faouz2020@db-produits:5432/produits_db
+      API_KEY: secret_key_123
+      ALLOWED_ORIGINS: "http://localhost:3000,http://localhost:4321,http://localhost:4322"
+      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672/
+    depends_on:
+      - db-produits
+      - rabbitmq
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health').read()"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  api-commandes:
+    build: ./api-commandes
+    ports:
+      - "8002:8000"
+    environment:
+      DATABASE_URL: postgresql://faouz:faouz2020@db-commandes:5432/commandes_db
+      API_KEY: secret_key_123
+      ALLOWED_ORIGINS: "http://localhost:3000,http://localhost:4321,http://localhost:4322"
+      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672/
+    depends_on:
+      - db-commandes
+      - rabbitmq
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health').read()"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # === MESSAGE BROKER ===
+  rabbitmq:
+    image: rabbitmq:3-management
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+
+  # === CONSUMER ===
+  consumer-commandes:
+    build: ./api-commandes
+    command: python -m app.consumer
+    environment:
+      DATABASE_URL: postgresql://faouz:faouz2020@db-commandes:5432/commandes_db
+      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672/
+    depends_on:
+      - db-commandes
+      - rabbitmq
+    restart: unless-stopped
+
+volumes:
+  db_clients_data:
+  db_produits_data:
+  db_commandes_data:

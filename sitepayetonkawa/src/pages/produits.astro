@@ -1,0 +1,112 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout title="Nos Cafes">
+    <!-- Header de la page -->
+    <section class="bg-marron-900 text-white py-12">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <h1 class="text-3xl font-bold">Nos Cafes</h1>
+            <p class="text-marron-200 mt-2">Decouvrez notre selection de cafes d'exception</p>
+        </div>
+    </section>
+
+    <!-- Liste des produits -->
+    <section class="py-12">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div id="products-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div class="col-span-full text-center py-12 text-gray-500">
+                    Chargement des produits...
+                </div>
+            </div>
+        </div>
+    </section>
+</Layout>
+
+<script>
+    import { getProduits } from '../lib/api';
+    import { addToCart } from '../lib/cart';
+
+    const placeholderImages = [
+        "/img/image_de_graine_de_cafe.jpg",
+        "https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?w=400&q=80",
+        "https://images.unsplash.com/photo-1497935586351-b67a49e012bf?w=400&q=80",
+        "https://images.unsplash.com/photo-1511920170033-f8396924c348?w=400&q=80",
+        "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=400&q=80",
+        "https://images.unsplash.com/photo-1461023058943-07fcbe16d735?w=400&q=80",
+    ];
+
+    async function loadProducts() {
+        const container = document.getElementById('products-grid');
+        if (!container) return;
+
+        try {
+            const produits = await getProduits();
+
+            if (produits.length === 0) {
+                container.innerHTML = '<div class="col-span-full text-center py-12 text-gray-500">Aucun produit disponible</div>';
+                return;
+            }
+
+            container.innerHTML = produits.map((p, i) => {
+                const image = p.image_url
+                    ? 'http://localhost:8001' + p.image_url
+                    : placeholderImages[i % placeholderImages.length];
+                return `
+                <div class="product-card bg-white rounded-2xl shadow-sm overflow-hidden border border-gray-100 fade-in">
+                    <a href="/produit/${p.id}">
+                        <div class="aspect-square overflow-hidden">
+                            <img
+                                src="${image}"
+                                alt="${p.nom}"
+                                class="w-full h-full object-cover hover:scale-110 transition-transform duration-300"
+                            />
+                        </div>
+                    </a>
+                    <div class="p-4">
+                        <a href="/produit/${p.id}">
+                            <h3 class="font-semibold text-gray-900 hover:text-marron-600 transition">${p.nom}</h3>
+                        </a>
+                        ${p.origine ? `<p class="text-sm text-gray-500 mt-1">Origine : ${p.origine}</p>` : ''}
+                        <p class="text-sm text-gray-500">Stock : ${p.stock}</p>
+                        <div class="flex items-center justify-between mt-3">
+                            <span class="text-lg font-bold text-marron-600">${p.prix.toFixed(2)} EUR</span>
+                            <button
+                                class="add-to-cart bg-marron-600 text-white px-3 py-1.5 rounded-lg text-sm font-medium hover:bg-marron-700 transition"
+                                data-id="${p.id}"
+                                data-nom="${p.nom}"
+                                data-prix="${p.prix}"
+                                data-image="${image}"
+                            >
+                                Ajouter
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `}).join('');
+
+            container.querySelectorAll('.add-to-cart').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const target = e.currentTarget as HTMLElement;
+                    addToCart({
+                        produit_id: parseInt(target.dataset.id!),
+                        nom: target.dataset.nom!,
+                        prix: parseFloat(target.dataset.prix!),
+                        image: target.dataset.image
+                    });
+                    target.textContent = 'Ajoute !';
+                    target.classList.add('bg-green-600');
+                    setTimeout(() => {
+                        target.textContent = 'Ajouter';
+                        target.classList.remove('bg-green-600');
+                    }, 1000);
+                });
+            });
+
+        } catch (error) {
+            container.innerHTML = '<div class="col-span-full text-center py-12 text-red-500">Erreur de chargement des produits. Verifiez que l\'API est demarree sur le port 8001.</div>';
+        }
+    }
+
+    loadProducts();
+</script>

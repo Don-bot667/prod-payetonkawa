@@ -1,0 +1,190 @@
+---
+import Layout from '../layouts/Layout.astro';
+import StatCard from '../components/StatCard.astro';
+---
+
+<Layout title="Tableau de bord" currentPage="dashboard">
+    <header class="bg-white border-b border-gray-100 px-8 py-6">
+        <div class="flex items-center justify-between">
+            <div>
+                <h2 class="text-2xl font-bold text-gray-900">Tableau de bord</h2>
+                
+            </div>
+            
+        </div>
+    </header>
+
+    <div class="p-8">
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <StatCard
+                title="Clients"
+                value="--"
+                description="clients enregistres"
+                id="stat-clients"
+                color="rose"
+            />
+            <StatCard
+                title="Produits"
+                value="--"
+                description="produits en catalogue"
+                id="stat-produits"
+                color="emerald"
+            />
+            <StatCard
+                title="Commandes"
+                value="--"
+                description="commandes passees"
+                id="stat-commandes"
+                color="amber"
+            />
+            
+        </div>
+
+        
+        <div class="card">
+            <div class="px-6 py-5 border-b border-gray-100 flex items-center justify-between">
+                <div>
+                    <h3 class="text-lg font-semibold text-gray-900">Dernieres commandes</h3>
+                    <p class="text-sm text-gray-500 mt-0.5">Les 5 commandes les plus recentes</p>
+                </div>
+                <a href="/commandes" class="text-sm text-indigo-600 hover:text-indigo-800 font-medium flex items-center gap-1">
+                    Voir tout
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                    </svg>
+                </a>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full">
+                    <thead class="table-header">
+                        <tr>
+                            <th class="px-6 py-4">ID</th>
+                            <th class="px-6 py-4">Client</th>
+                            <th class="px-6 py-4">Total</th>
+                            <th class="px-6 py-4">Statut</th>
+                            <th class="px-6 py-4">Date</th>
+                        </tr>
+                    </thead>
+                    <tbody id="table-commandes" class="divide-y divide-gray-100 text-sm">
+                        <tr>
+                            <td colspan="5" class="px-6 py-12 text-center text-gray-400">
+                                <svg class="w-8 h-8 mx-auto mb-2 animate-spin text-gray-300" fill="none" viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                                Chargement...
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</Layout>
+
+<script>
+    import { getClients, getProduits, getCommandes } from '../lib/api';
+
+    const btnRefresh = document.getElementById("btn-refresh");
+    const lastUpdateEl = document.getElementById("last-update");
+
+    async function loadDashboard() {
+        // Charger les stats clients
+        try {
+            const clients = await getClients();
+            const el = document.getElementById("stat-clients");
+            if (el) el.textContent = String(clients.length);
+        } catch (e) {
+            const el = document.getElementById("stat-clients");
+            if (el) el.textContent = "Err";
+        }
+
+        // Charger les stats produits
+        try {
+            const produits = await getProduits();
+            const el = document.getElementById("stat-produits");
+            if (el) el.textContent = String(produits.length);
+        } catch (e) {
+            const el = document.getElementById("stat-produits");
+            if (el) el.textContent = "Err";
+        }
+
+        // Charger les stats commandes + tableau + revenue
+        try {
+            const commandes = await getCommandes();
+            const elStat = document.getElementById("stat-commandes");
+            if (elStat) elStat.textContent = String(commandes.length);
+
+            // Calculer le chiffre d'affaires total
+            const totalRevenue = commandes.reduce((sum, c) => sum + c.total, 0);
+            const elRevenue = document.getElementById("stat-revenue");
+            if (elRevenue) elRevenue.textContent = totalRevenue.toFixed(2) + " EUR";
+
+            const tbody = document.getElementById("table-commandes");
+            if (!tbody) return;
+
+            const dernieres = commandes.slice(-5).reverse();
+
+            if (dernieres.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="5" class="px-6 py-12 text-center">
+                            <svg class="w-12 h-12 mx-auto mb-3 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                            </svg>
+                            <p class="text-gray-500 font-medium">Aucune commande</p>
+                            <p class="text-gray-400 text-sm mt-1">Les commandes apparaitront ici</p>
+                        </td>
+                    </tr>`;
+                return;
+            }
+
+            const statusLabels: Record<string, string> = {
+                'en_attente': 'En attente',
+                'validee': 'Validee',
+                'en_preparation': 'Preparation',
+                'expediee': 'Expediee',
+                'livree': 'Livree',
+                'annulee': 'Annulee'
+            };
+
+            tbody.innerHTML = dernieres.map(c => {
+                const date = new Date(c.date_commande).toLocaleDateString("fr-FR", {
+                    day: 'numeric',
+                    month: 'short',
+                    year: 'numeric'
+                });
+                return `<tr class="hover:bg-gray-50/50 transition-colors">
+                    <td class="table-cell font-semibold text-gray-900">#${c.id}</td>
+                    <td class="table-cell text-gray-600">Client #${c.client_id}</td>
+                    <td class="table-cell font-semibold text-gray-900">${c.total.toFixed(2)} EUR</td>
+                    <td class="table-cell"><span class="badge badge-${c.statut}">${statusLabels[c.statut] || c.statut}</span></td>
+                    <td class="table-cell text-gray-500">${date}</td>
+                </tr>`;
+            }).join("");
+
+        } catch (e) {
+            const el = document.getElementById("stat-commandes");
+            if (el) el.textContent = "Err";
+            const elRevenue = document.getElementById("stat-revenue");
+            if (elRevenue) elRevenue.textContent = "Err";
+        }
+
+        // Mettre a jour l'heure
+        if (lastUpdateEl) {
+            lastUpdateEl.textContent = "Mis a jour a " + new Date().toLocaleTimeString("fr-FR", { hour: '2-digit', minute: '2-digit' });
+        }
+    }
+
+    // Bouton refresh
+    btnRefresh?.addEventListener('click', () => {
+        btnRefresh.classList.add('animate-spin');
+        loadDashboard().finally(() => {
+            setTimeout(() => btnRefresh.classList.remove('animate-spin'), 500);
+        });
+    });
+
+    // Lancer au chargement de la page
+    loadDashboard();
+</script>

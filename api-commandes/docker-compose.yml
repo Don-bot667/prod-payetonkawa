@@ -1,0 +1,23 @@
+services:
+  db-commandes:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: faouz
+      POSTGRES_PASSWORD: faouz2020
+      POSTGRES_DB: commandes_db
+    ports:
+      - "5438:5432"
+    volumes:
+      - db_commandes_data:/var/lib/postgresql/data
+
+  api-commandes:
+    build: .
+    ports:
+      - "8002:8000"
+    environment:
+      DATABASE_URL: postgresql://faouz:faouz2020@db-commandes:5432/commandes_db
+    depends_on:
+      - db-commandes
+
+volumes:
+  db_commandes_data:

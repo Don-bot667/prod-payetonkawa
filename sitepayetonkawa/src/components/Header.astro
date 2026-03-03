@@ -1,0 +1,86 @@
+---
+// Header avec navigation
+---
+
+<header class="bg-white shadow-sm sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between items-center h-16">
+            <!-- Logo -->
+            <a href="/">
+                <img src="/img/logo.png" alt="PayeTonKawa" class="h-12 w-auto object-contain">
+            </a>
+
+            <!-- Navigation -->
+            <nav class="hidden md:flex items-center gap-8">
+                <a href="/" class="text-gray-600 hover:text-marron-600 transition">Accueil</a>
+                <a href="/produits" class="text-gray-600 hover:text-marron-600 transition">Nos Cafes</a>
+            </nav>
+
+            <!-- Actions -->
+            <div class="flex items-center gap-4">
+                <!-- Panier -->
+                <a href="/panier" class="relative p-2 text-gray-600 hover:text-marron-600 transition">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                    </svg>
+                    <span id="cart-count" class="absolute -top-1 -right-1 bg-marron-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center hidden">0</span>
+                </a>
+
+                <!-- Compte -->
+                <div id="user-menu">
+                    <a href="/connexion" id="btn-login" class="text-gray-600 hover:text-marron-600 transition">
+                        Connexion
+                    </a>
+                    <div id="user-logged" class="hidden flex items-center gap-4">
+                        <a href="/compte" class="text-gray-600 hover:text-marron-600 transition">
+                            <span id="user-name">Mon compte</span>
+                        </a>
+                        <button id="btn-logout" class="text-sm text-gray-500 hover:text-red-600 transition">
+                            Deconnexion
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+
+<script>
+    import { getUser, logout } from '../lib/auth';
+    import { getCartCount } from '../lib/cart';
+
+    function updateUI() {
+        const user = getUser();
+        const btnLogin = document.getElementById('btn-login');
+        const userLogged = document.getElementById('user-logged');
+        const userName = document.getElementById('user-name');
+        const cartCountEl = document.getElementById('cart-count');
+
+        const count = getCartCount();
+        if (cartCountEl) {
+            if (count > 0) {
+                cartCountEl.textContent = String(count);
+                cartCountEl.classList.remove('hidden');
+            } else {
+                cartCountEl.classList.add('hidden');
+            }
+        }
+
+        if (user) {
+            btnLogin?.classList.add('hidden');
+            userLogged?.classList.remove('hidden');
+            if (userName) userName.textContent = user.prenom;
+        } else {
+            btnLogin?.classList.remove('hidden');
+            userLogged?.classList.add('hidden');
+        }
+    }
+
+    document.getElementById('btn-logout')?.addEventListener('click', () => {
+        logout();
+        window.location.href = '/';
+    });
+
+    window.addEventListener('cart-updated', updateUI);
+    updateUI();
+</script>

@@ -1,0 +1,10 @@
+{
+  "$schema": "https://json.schemastore.org/pyrightconfig.json",
+  "include": ["api-clients"],
+  "venvPath": ".",
+  "venv": ".venv"
+}
+
+
+
+
