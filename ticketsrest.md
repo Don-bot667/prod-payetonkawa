@@ -1,100 +1,64 @@
-**J'ai trouvé le problème !** 🔍
+# 🎫 TICKET : Corriger CORS pour la production
 
-Dans `sitepayetonkawa/src/lib/api.ts`, les URLs sont en **localhost** :
+## 📋 Fichier à modifier
 
-```ts
-const API_CLIENTS = "http://localhost:8000";
-const API_PRODUITS = "http://localhost:8001";
-const API_COMMANDES = "http://localhost:8002";
-```
+### `docker-compose.yml`
 
-En production, le navigateur de l'utilisateur essaie d'accéder à `localhost` sur **sa propre machine**, pas sur ton serveur !
+Cherche les 3 occurrences de `ALLOWED_ORIGINS` et remplace-les **toutes** par :
 
----
-
-## 🎫 TICKET : Corriger les URLs des APIs pour la production
-
-### Fichiers à modifier (2 fichiers)
-
----
-
-### 1️⃣ `sitepayetonkawa/src/lib/api.ts`
-
-**Remplacer les 3 premières lignes :**
-
-```ts
-// Configuration des APIs
-const API_CLIENTS = "https://api.payetonkawa.ouzfa.com";
-const API_PRODUITS = "https://api.payetonkawa.ouzfa.com";
-const API_COMMANDES = "https://api.payetonkawa.ouzfa.com";
+```yaml
+ALLOWED_ORIGINS: "https://payetonkawa.ouzfa.com,https://admin.payetonkawa.ouzfa.com,http://localhost:3000,http://localhost:4321,http://localhost:4322"
 ```
 
 ---
 
-### 2️⃣ `gestionpayetonkawa/src/lib/api.ts`
+## 📍 Les 3 endroits à modifier
 
-**Même chose** — remplacer les URLs localhost par :
+### 1️⃣ Dans `api-clients` (ligne ~20)
+```yaml
+  api-clients:
+    build: ./api-clients
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_URL: postgresql://faouz:faouz2020@db-clients:5432/clients_db
+      API_KEY: secret_key_123
+      ALLOWED_ORIGINS: "https://payetonkawa.ouzfa.com,https://admin.payetonkawa.ouzfa.com,http://localhost:3000,http://localhost:4321,http://localhost:4322"
+      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672/
+```
 
-```ts
-const API_CLIENTS = "https://api.payetonkawa.ouzfa.com";
-const API_PRODUITS = "https://api.payetonkawa.ouzfa.com";
-const API_COMMANDES = "https://api.payetonkawa.ouzfa.com";
+### 2️⃣ Dans `api-produits` (ligne ~35)
+```yaml
+  api-produits:
+    build: ./api-produits
+    ports:
+      - "8001:8000"
+    environment:
+      DATABASE_URL: postgresql://faouz:faouz2020@db-produits:5432/produits_db
+      API_KEY: secret_key_123
+      ALLOWED_ORIGINS: "https://payetonkawa.ouzfa.com,https://admin.payetonkawa.ouzfa.com,http://localhost:3000,http://localhost:4321,http://localhost:4322"
+      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672/
+```
+
+### 3️⃣ Dans `api-commandes` (ligne ~50)
+```yaml
+  api-commandes:
+    build: ./api-commandes
+    ports:
+      - "8002:8000"
+    environment:
+      DATABASE_URL: postgresql://faouz:faouz2020@db-commandes:5432/commandes_db
+      API_KEY: secret_key_123
+      ALLOWED_ORIGINS: "https://payetonkawa.ouzfa.com,https://admin.payetonkawa.ouzfa.com,http://localhost:3000,http://localhost:4321,http://localhost:4322"
+      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672/
 ```
 
 ---
 
-### 3️⃣ Mettre à jour Nginx pour router toutes les routes API
+## ✅ Checklist
 
-Actuellement Nginx route `/clients`, `/products`, `/orders` mais le code appelle `/customers/`, `/products/`, `/orders/`.
+- [ ] Modifier `ALLOWED_ORIGINS` dans `api-clients`
+- [ ] Modifier `ALLOWED_ORIGINS` dans `api-produits`
+- [ ] Modifier `ALLOWED_ORIGINS` dans `api-commandes`
+- [ ] `git add . && git commit -m "fix: CORS for production domains" && git push`
 
-```bash
-sudo nano /etc/nginx/sites-available/payetonkawa
-```
-
-Dans le bloc `api.payetonkawa.ouzfa.com`, **remplace** par :
-
-```nginx
-server {
-    server_name api.payetonkawa.ouzfa.com;
-
-    location /customers {
-        proxy_pass http://localhost:8000;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-    }
-
-    location /products {
-        proxy_pass http://localhost:8001;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-    }
-
-    location /orders {
-        proxy_pass http://localhost:8002;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-    }
-
-    location /docs {
-        proxy_pass http://localhost:8000/docs;
-        proxy_set_header Host $host;
-    }
-
-    location /openapi.json {
-        proxy_pass http://localhost:8000/openapi.json;
-        proxy_set_header Host $host;
-    }
-
-    listen 443 ssl;
-    ssl_certificate /etc/letsencrypt/live/payetonkawa.ouzfa.com/fullchain.pem;
-    ssl_certificate_key /etc/letsencrypt/live/payetonkawa.ouzfa.com/privkey.pem;
-    include /etc/letsencrypt/options-ssl-nginx.conf;
-    ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
-}
-```

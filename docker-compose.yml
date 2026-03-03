@@ -41,7 +41,7 @@ services:
     environment:
       DATABASE_URL: postgresql://faouz:faouz2020@db-clients:5432/clients_db
       API_KEY: secret_key_123
-      ALLOWED_ORIGINS: "http://localhost:3000,http://localhost:4321,http://localhost:4322"
+      ALLOWED_ORIGINS: "https://payetonkawa.ouzfa.com,https://admin.payetonkawa.ouzfa.com,http://localhost:3000,http://localhost:4321,http://localhost:4322"
       RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672/
     depends_on:
       - db-clients
@@ -60,7 +60,7 @@ services:
     environment:
       DATABASE_URL: postgresql://faouz:faouz2020@db-produits:5432/produits_db
       API_KEY: secret_key_123
-      ALLOWED_ORIGINS: "http://localhost:3000,http://localhost:4321,http://localhost:4322"
+      ALLOWED_ORIGINS: "https://payetonkawa.ouzfa.com,https://admin.payetonkawa.ouzfa.com,http://localhost:3000,http://localhost:4321,http://localhost:4322"
       RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672/
     depends_on:
       - db-produits
@@ -79,7 +79,7 @@ services:
     environment:
       DATABASE_URL: postgresql://faouz:faouz2020@db-commandes:5432/commandes_db
       API_KEY: secret_key_123
-      ALLOWED_ORIGINS: "http://localhost:3000,http://localhost:4321,http://localhost:4322"
+      ALLOWED_ORIGINS: "https://payetonkawa.ouzfa.com,https://admin.payetonkawa.ouzfa.com,http://localhost:3000,http://localhost:4321,http://localhost:4322"
       RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672/
     depends_on:
       - db-commandes
