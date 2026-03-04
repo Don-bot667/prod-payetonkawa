@@ -13,7 +13,7 @@ PayeTonKawa est une application e-commerce spécialisée dans la vente de café,
 │                         NAVIGATEURS                              │
 │   ┌─────────────────────┐        ┌─────────────────────┐        │
 │   │   Site client        │        │   Site admin         │       │
-│   │   (Astro - :4321)    │        │   (Astro - :4322)    │       │
+│   │   (Astro - :4321)    │        │   (Astro - :3000)    │       │
 │   └──────────┬──────────┘        └──────────┬──────────┘        │
 └──────────────┼────────────────────────────────┼──────────────────┘
                │  requêtes HTTP                 │  requêtes HTTP
@@ -59,9 +59,11 @@ PayeTonKawa est une application e-commerce spécialisée dans la vente de café,
 | api-clients | 8000 | clients_db (5436) | CRUD clients + authentification |
 | api-produits | 8001 | produits_db (5437) | Catalogue + gestion stock + images |
 | api-commandes | 8002 | commandes_db (5438) | Commandes + lignes de commande |
+| consumer-commandes | — | commandes_db (5438) | Consumer RabbitMQ (réagit à client.deleted) |
 | site client | 4321 | — | Frontend e-commerce (Astro) |
-| site admin | 4322 | — | Frontend gestion (Astro) |
+| site admin | 3000 | — | Frontend gestion (Astro) |
 | RabbitMQ | 5672 / 15672 | — | Messagerie asynchrone |
+| pgAdmin | 5050 | — | Interface web d'administration PostgreSQL |
 
 Chaque API a **sa propre base de données**. C'est le principe d'isolation des micro-services : aucune API ne lit directement dans la base d'une autre.
 
@@ -152,7 +154,7 @@ Isolation complète : si la base des produits est en maintenance, les clients pe
 
 ### Conteneurisation : Docker + Docker Compose
 
-Chaque service tourne dans son propre conteneur Docker. Docker Compose orchestre le tout : un seul `docker compose up` lance les 7 services (3 APIs + 3 bases + RabbitMQ).
+Chaque service tourne dans son propre conteneur Docker. Docker Compose orchestre le tout : un seul `docker compose up` lance les 9 services (3 APIs + 3 bases + RabbitMQ + consumer-commandes + pgAdmin).
 
 **Avantages :**
 - Environnement identique en développement et production

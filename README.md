@@ -40,9 +40,11 @@ PayeTonKawa permet de gérer la vente de café en ligne avec :
 | api-clients | 8000 | CRUD clients + authentification |
 | api-produits | 8001 | Catalogue + stock + images |
 | api-commandes | 8002 | Commandes + lignes |
+| consumer-commandes | — | Consumer RabbitMQ (écoute client.deleted) |
 | Site client (Astro) | 4321 | Frontend e-commerce |
-| Site admin (Astro) | 4322 | Interface de gestion |
+| Site admin (Astro) | 3000 | Interface de gestion |
 | RabbitMQ | 5672 / 15672 | Message broker |
+| pgAdmin | 5050 | Interface web PostgreSQL |
 
 ---
 
@@ -74,7 +76,10 @@ docker compose ps
 | API Clients (Swagger) | http://localhost:8000/docs |
 | API Produits (Swagger) | http://localhost:8001/docs |
 | API Commandes (Swagger) | http://localhost:8002/docs |
+| Site client | http://localhost:4321 |
+| Site admin | http://localhost:3000 |
 | RabbitMQ Management | http://localhost:15672 (guest / guest) |
+| pgAdmin | http://localhost:5050 (faouz@gmail.com / faouz) |
 
 ### Arrêt
 

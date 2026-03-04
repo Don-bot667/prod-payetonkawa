@@ -32,8 +32,7 @@ Ce guide explique comment creer le site e-commerce PayeTonKawa avec Astro et Tai
 
 ```
 sitepayetonkawa/
-├── astro.config.mjs          <- Configuration Astro
-├── tailwind.config.mjs       <- Configuration Tailwind
+├── astro.config.mjs          <- Configuration Astro (inclut Tailwind v4)
 ├── tsconfig.json             <- Configuration TypeScript
 ├── package.json              <- Dependances
 ├── public/
@@ -44,8 +43,6 @@ sitepayetonkawa/
 │   ├── components/
 │   │   ├── Header.astro      <- Barre de navigation
 │   │   ├── Footer.astro      <- Pied de page
-│   │   ├── ProductCard.astro <- Carte produit (catalogue)
-│   │   ├── CartIcon.astro    <- Icone panier avec compteur
 │   │   └── Hero.astro        <- Banniere d'accueil
 │   ├── lib/
 │   │   ├── api.ts            <- Fonctions pour appeler les APIs
@@ -85,11 +82,23 @@ Reponses aux questions :
 
 ## ETAPE 2 : INSTALLER TAILWIND CSS
 
+Ce projet utilise **Tailwind CSS v4** avec le plugin Vite (plus de `tailwind.config.mjs`).
+
 ```bash
-npx astro add tailwind
+npm install tailwindcss @tailwindcss/vite
 ```
 
-Reponds `Yes` a tout.
+Puis dans `astro.config.mjs`, ajoute le plugin :
+
+```js
+import tailwindcss from '@tailwindcss/vite';
+
+export default defineConfig({
+  vite: {
+    plugins: [tailwindcss()]
+  }
+});
+```
 
 ---
 
@@ -123,11 +132,11 @@ L'authentification permet de savoir **qui est l'utilisateur**. Sans elle, le sit
 ┌─────────────────────────────────────────────────────────────────┐
 │                    CONNEXION                                     │
 │                                                                 │
-│  1. L'utilisateur entre son email                              │
-│  2. On demande a l'API la liste des clients (GET /customers/)  │
-│  3. On cherche le client avec cet email                        │
-│  4. Si trouve : on stocke son ID dans localStorage             │
-│  5. Si pas trouve : message d'erreur                           │
+│  1. L'utilisateur entre son email et son mot de passe          │
+│  2. On envoie les identifiants a l'API (POST /customers/login) │
+│  3. L'API verifie le mot de passe (bcrypt)                     │
+│  4. Si correct : on stocke le profil dans localStorage         │
+│  5. Si incorrect : l'API retourne 401, message d'erreur        │
 └─────────────────────────────────────────────────────────────────┘
 
 ┌─────────────────────────────────────────────────────────────────┐
@@ -153,13 +162,13 @@ L'authentification permet de savoir **qui est l'utilisateur**. Sans elle, le sit
 // Les donnees restent meme si on ferme le navigateur
 
 // Sauvegarder l'utilisateur connecte
-localStorage.setItem('user', JSON.stringify({ id: 1, nom: 'Dupont', email: 'a@b.com' }));
+localStorage.setItem('payetonkawa_user', JSON.stringify({ id: 1, nom: 'Dupont', email: 'a@b.com' }));
 
 // Recuperer l'utilisateur
-const user = JSON.parse(localStorage.getItem('user'));
+const user = JSON.parse(localStorage.getItem('payetonkawa_user'));
 
 // Supprimer (deconnexion)
-localStorage.removeItem('user');
+localStorage.removeItem('payetonkawa_user');
 ```
 
 ### Schema du flux d'authentification
@@ -187,10 +196,7 @@ Dans un vrai site e-commerce, on utiliserait :
 - Une **API d'authentification** dediee
 - Du **HTTPS** obligatoire
 
-Pour ce projet MSPR, on utilise une version simplifiee car :
-1. L'API Clients n'a pas de champ mot de passe
-2. C'est plus simple a comprendre
-3. C'est suffisant pour une demonstration
+Pour ce projet MSPR, l'authentification utilise `POST /customers/login` avec email et mot de passe. Le mot de passe est hashe en bcrypt cote serveur. La session est stockee dans le localStorage (pas de token JWT), ce qui est suffisant pour une demonstration scolaire.
 
 ---
 

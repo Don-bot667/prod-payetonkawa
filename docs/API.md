@@ -159,6 +159,17 @@ curl -X DELETE http://localhost:8000/customers/1 \
 
 ## API Produits — port 8001
 
+### GET /products/uploads/{filename}
+Retourne l'image d'un produit. **Pas d'authentification requise.**
+
+```bash
+curl http://localhost:8001/products/uploads/produit_1.jpg
+# Retourne le fichier image directement
+```
+Retourne **404** si l'image n'existe pas.
+
+---
+
 ### GET /health
 ```bash
 curl http://localhost:8001/health
