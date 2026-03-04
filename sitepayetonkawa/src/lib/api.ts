@@ -119,6 +119,9 @@ export async function loginClient(email: string, mot_de_passe: string): Promise<
 
 export function getImageUrl(imageUrl: string | null | undefined): string {
     if (!imageUrl) return '';
+    if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
+        return imageUrl;
+    }
     return `${API_PRODUITS}/products${imageUrl}`;
 }
 

@@ -95,12 +95,12 @@ import Layout from '../layouts/Layout.astro';
                     <input type="text" id="input-origine" class="input" placeholder="Bresil, Colombie, Ethiopie...">
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Photo du produit</label>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Lien de la photo</label>
                     <div id="image-preview-container" class="hidden mb-2">
                         <img id="image-preview" src="" alt="Apercu" class="w-20 h-20 object-cover rounded-lg border border-gray-200">
                     </div>
-                    <input type="file" id="input-image" accept="image/jpeg,image/png,image/webp" class="block w-full text-sm text-gray-600 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100">
-                    <p class="text-xs text-gray-400 mt-1">Formats acceptes : JPG, PNG, WEBP</p>
+                    <input type="url" id="input-image-url" class="input" placeholder="https://exemple.com/photo-cafe.jpg">
+                    <p class="text-xs text-gray-400 mt-1">Colle le lien direct vers une image (jpg, png, webp...)</p>
                 </div>
                 <div class="flex justify-end gap-3 pt-4 border-t border-gray-100">
                     <button type="button" id="btn-annuler" class="btn-secondary">Annuler</button>
@@ -117,7 +117,7 @@ import Layout from '../layouts/Layout.astro';
 </Layout>
 
 <script>
-    import { getProduits, getProduit, createProduit, updateProduit, deleteProduit, uploadProductImage, getImageUrl, type ProduitCreate } from '../lib/api';
+    import { getProduits, getProduit, createProduit, updateProduit, deleteProduit, getImageUrl, type ProduitCreate } from '../lib/api';
 
     let editMode = false;
 
@@ -136,15 +136,15 @@ import Layout from '../layouts/Layout.astro';
     const inputStock = document.getElementById("input-stock") as HTMLInputElement;
     const inputPoids = document.getElementById("input-poids") as HTMLInputElement;
     const inputOrigine = document.getElementById("input-origine") as HTMLInputElement;
-    const inputImage = document.getElementById("input-image") as HTMLInputElement;
+    const inputImageUrl = document.getElementById("input-image-url") as HTMLInputElement;
     const imagePreview = document.getElementById("image-preview") as HTMLImageElement;
     const imagePreviewContainer = document.getElementById("image-preview-container")!;
 
-    // Apercu de l'image selectionnee
-    inputImage.addEventListener("change", () => {
-        const file = inputImage.files?.[0];
-        if (file) {
-            imagePreview.src = URL.createObjectURL(file);
+    // Apercu de l'image quand on colle un lien
+    inputImageUrl.addEventListener("input", () => {
+        const url = inputImageUrl.value.trim();
+        if (url) {
+            imagePreview.src = url;
             imagePreviewContainer.classList.remove("hidden");
         } else {
             imagePreviewContainer.classList.add("hidden");
@@ -277,6 +277,13 @@ import Layout from '../layouts/Layout.astro';
         inputStock.value = String(p.stock);
         inputPoids.value = String(p.poids_kg);
         inputOrigine.value = p.origine || "";
+        inputImageUrl.value = p.image_url || "";
+        if (p.image_url) {
+            imagePreview.src = p.image_url;
+            imagePreviewContainer.classList.remove("hidden");
+        } else {
+            imagePreviewContainer.classList.add("hidden");
+        }
 
         modal.classList.remove("hidden");
         modal.classList.add("flex");
@@ -285,7 +292,7 @@ import Layout from '../layouts/Layout.astro';
     function closeModal() {
         modal.classList.add("hidden");
         modal.classList.remove("flex");
-        inputImage.value = "";
+        inputImageUrl.value = "";
         imagePreviewContainer.classList.add("hidden");
     }
 
@@ -303,28 +310,23 @@ import Layout from '../layouts/Layout.astro';
             prix: parseFloat(inputPrix.value),
             stock: parseInt(inputStock.value),
             poids_kg: parseFloat(inputPoids.value),
-            origine: inputOrigine.value || undefined
+            origine: inputOrigine.value || undefined,
+            image_url: inputImageUrl.value.trim() || undefined
         };
 
         try {
-            let savedProduit;
             if (editMode) {
-                savedProduit = await updateProduit(parseInt(inputId.value), data);
+                await updateProduit(parseInt(inputId.value), data);
             } else {
-                savedProduit = await createProduit(data);
+                await createProduit(data);
             }
-
-            // Uploader l'image si une est selectionnee
-            const imageFile = inputImage.files?.[0];
-            if (imageFile && savedProduit?.id) {
-                await uploadProductImage(savedProduit.id, imageFile);
-            }
-
-            closeModal();
-            loadProduits();
         } catch {
-            alert("Erreur lors de l'enregistrement");
+            alert("Erreur lors de l'enregistrement du produit");
+            return;
         }
+
+        closeModal();
+        loadProduits();
     });
 
     // Charger au demarrage

@@ -11,6 +11,7 @@ class ProduitCreate(BaseModel):
     stock: int = Field(0, ge=0, description="Le stock doit être >= 0")
     origine: Optional[str] = Field(None, max_length=100)
     poids_kg: float = Field(1.0, gt=0, description="Le poids doit être supérieur à 0")
+    image_url: Optional[str] = Field(None, max_length=500)
 
 
 # Ce qu'on envoie pour MODIFIER un produit (PUT)
@@ -22,6 +23,7 @@ class ProduitUpdate(BaseModel):
     origine: Optional[str] = Field(None, max_length=100)
     poids_kg: Optional[float] = Field(None, gt=0)
     actif: Optional[bool] = None
+    image_url: Optional[str] = Field(None, max_length=500)
 
 
 # Ce que l'API RENVOIE (la reponse)

@@ -53,6 +53,7 @@ export interface ProduitCreate {
     stock: number;
     poids_kg: number;
     origine?: string;
+    image_url?: string;
 }
 
 export interface LigneCommande {
@@ -118,6 +119,9 @@ export async function deleteClient(id: number): Promise<void> {
 
 export function getImageUrl(imageUrl: string | null | undefined): string {
     if (!imageUrl) return '';
+    if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
+        return imageUrl;
+    }
     return `${API_PRODUITS}/products${imageUrl}`;
 }
 
